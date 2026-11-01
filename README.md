@@ -4,6 +4,10 @@ A native iPhone app with six daily puzzle games, an animated open-fold card deck
 
 Swipe the folded cards to explore. Tap the front card to play. Open the circle to browse all games, revisit the previous 30 days, or see your streak and progress. The app supports light/dark appearance, VoiceOver and Dynamic Type. Reduce Motion disables the deck's 3D animation.
 
+<img src="docs/home.png" alt="X native iOS open-fold deck" width="300">
+
+[Watch the live deck interaction](docs/deck-motion.mp4)
+
 ## Playable games
 
 | Game | Rules |

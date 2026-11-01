@@ -14,18 +14,32 @@
   ],
   "verification": {
     "coreTests": "12 passed",
-    "uiFlows": "6 passed",
-    "deckCycle": "6 front cards and native navigation passed",
+    "uiFlows": "Full final-source suite: 6 tests passed, zero failures, build/Verified.xcresult",
+    "deckCycle": "All six front cards, direct swipes, wrap-around and native navigation verified by final suite",
     "device": "iPhone 17 Pro Simulator, iOS 26.5",
     "physicalDevice": "not performed"
   },
   "review": {
-    "disposition": "fix",
-    "materialFixes": [
-      "Expose rear headers and enlarge previews",
-      "Reflow maximum Dynamic Type header and footer",
-      "Increase input prompt contrast"
-    ],
-    "status": "fix batch implemented; final recaptures and verdict pending"
-  }
+    "disposition": "ship",
+    "scope": "Verdict pass over the four material findings from the initial native finish review. All four scored resolved; this is not a claim of physical-device certification.",
+    "status": "complete",
+    "fixes": {
+      "rearHeaderGeometryAndPreviewScale": "resolved",
+      "maximumDynamicTypeHeaderAndFooter": "resolved",
+      "inputPromptContrast": "resolved; reviewer calculated approximately 5.27:1 in light appearance",
+      "nativePersistenceRecord": "resolved"
+    }
+  },
+  "evidence": [
+    ".impeccable/review/phone-light.png",
+    ".impeccable/review/phone-dark.png",
+    ".impeccable/review/phone-large-type-reviewed.png",
+    ".impeccable/review/Deck-0.png",
+    ".impeccable/review/Deck-1.png",
+    ".impeccable/review/Deck-2.png",
+    ".impeccable/review/Deck-3.png",
+    ".impeccable/review/Deck-4.png",
+    ".impeccable/review/Deck-5.png",
+    "docs/deck-motion.mp4"
+  ]
 }

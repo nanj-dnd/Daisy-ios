@@ -1,0 +1,11 @@
+{
+  "disposition": "ship",
+  "scope": "Verdict pass over the four material findings from the initial native finish review. All four scored resolved; this is not a claim of physical-device certification.",
+  "status": "complete",
+  "fixes": {
+    "rearHeaderGeometryAndPreviewScale": "resolved",
+    "maximumDynamicTypeHeaderAndFooter": "resolved",
+    "inputPromptContrast": "resolved; reviewer calculated approximately 5.27:1 in light appearance",
+    "nativePersistenceRecord": "resolved"
+  }
+}
