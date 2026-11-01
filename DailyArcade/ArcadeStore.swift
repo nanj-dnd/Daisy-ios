@@ -73,27 +73,15 @@ final class ArcadeStore {
         return state.started ? "Continue" : kind.duration
     }
     func beginTriviaRound(_ edition: DailyEdition) {
-        let p = progress(.trivia, edition)
-        guard !p.completed, p.round < 7, p.roundDeadline == nil, p.triviaPoints.count == p.round else { return }
-        update(.trivia, edition) { $0.started = true; $0.startedAt = $0.startedAt ?? Date(); $0.roundDeadline = Date().addingTimeInterval(25); $0.pendingAnswer = "" }
+        update(.trivia, edition) { TriviaRules.begin(&$0) }
     }
-    /// Timer submits at most once, including after a background/resume transition.
     func submitTrivia(_ edition: DailyEdition, answer: String, now: Date = Date(), timeout: Bool = false) {
         let p = progress(.trivia, edition)
-        guard !p.completed, p.round < 7, p.triviaPoints.count == p.round, let deadline = p.roundDeadline else { return }
-        let expired = now >= deadline
-        if timeout && !expired { return }
-        let text = expired ? "" : answer
-        let points = PuzzleContent.trivia(for: edition)[p.round].match(text)?.points ?? 0
-        update(.trivia, edition) { state in
-            state.guesses.append(text); state.triviaPoints.append(points); state.roundDeadline = nil; state.pendingAnswer = ""
-            if state.round == 6 { state.finish(won: state.triviaPoints.contains { $0 > 0 }, now: now) }
-        }
+        guard !p.completed, p.round < 7, p.triviaPoints.count == p.round, p.roundDeadline != nil else { return }
+        let prompt = PuzzleContent.trivia(for: edition)[p.round]
+        update(.trivia, edition) { _ = TriviaRules.submit(&$0, prompt: prompt, answer: answer, now: now, timeout: timeout) }
     }
     func nextTriviaRound(_ edition: DailyEdition) {
-        let p = progress(.trivia, edition)
-        guard !p.completed, p.triviaPoints.count == p.round + 1, p.round < 6 else { return }
-        update(.trivia, edition) { $0.round += 1 }
-        beginTriviaRound(edition)
+        update(.trivia, edition) { TriviaRules.advance(&$0) }
     }
 }

@@ -23,7 +23,19 @@ public struct ProgressRepository {
         guard FileManager.default.fileExists(atPath: url.path) else { return SaveData() }
         let data = try Data(contentsOf: url)
         let save = try JSONDecoder().decode(SaveData.self, from: data)
-        guard save.schemaVersion == 1 else { throw CocoaError(.coderReadCorrupt) }
+        guard save.schemaVersion == 1, save.games.allSatisfy({ key, value in
+            let pieces = key.split(separator: ":")
+            guard pieces.count == 2, Int(pieces[0]) != nil, GameKind(rawValue: String(pieces[1])) != nil else { return false }
+            return (value.board.isEmpty || (value.board.count == 36 && value.board.allSatisfy { (0...6).contains($0) }))
+                && (0..<7).contains(value.round) && value.triviaPoints.count <= 7
+                && value.triviaPoints.allSatisfy { (0...100).contains($0) }
+                && value.solvedGroups.count <= 4 && Set(value.solvedGroups).count == value.solvedGroups.count
+                && value.solvedGroups.allSatisfy { (0..<4).contains($0) }
+                && (0...4).contains(value.mistakes) && (0...2).contains(value.hints)
+                && value.values.count <= 3 && value.values.allSatisfy { $0 > 0 && $0.isFinite }
+                && value.guesses.count <= 7 && value.guesses.allSatisfy { $0.count <= 200 }
+                && value.notes.allSatisfy { key, notes in (0..<36).contains(key) && notes.allSatisfy { (1...6).contains($0) } }
+        }) else { throw CocoaError(.coderReadCorrupt) }
         return save
     }
     public func save(_ value: SaveData) throws {
@@ -36,7 +48,7 @@ public struct ProgressRepository {
 
 public enum ResultShare {
     public static func text(kind: GameKind, edition: DailyEdition, progress: GameProgress) -> String {
-        let heading = "Daily Arcade · \(kind.title)\n\(edition.dateLabel) · #\(edition.number)"
+        let heading = "X · \(kind.title)\n\(edition.dateLabel) · #\(edition.number)"
         guard progress.completed else { return heading + "\nToday's puzzle is waiting." }
         let result: String
         switch kind {

@@ -64,7 +64,7 @@ public struct DailyEdition: Hashable, Codable, Identifiable, Sendable {
     public var date: Date { Date(timeIntervalSince1970: Double(day) * Self.secondsPerDay) }
     public var nextDate: Date { Date(timeIntervalSince1970: Double(day + 1) * Self.secondsPerDay) }
     public var key: String { "edition-\(day)" }
-    public var number: Int { max(1, day - 20_759 + 1) }
+    public var number: Int { max(1, day - 20_727 + 1) }
     public func index(count: Int, salt: Int = 0) -> Int { ((day + salt) % count + count) % count }
     public var dateLabel: String {
         let formatter = DateFormatter()

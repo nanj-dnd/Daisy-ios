@@ -1,0 +1,694 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-01T22:41:31.607519+00:00",
+  "title": "Design System: X",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Sky canvas",
+        "tonalRamp": [
+          "oklch(15.00% 0.0137 247.97)",
+          "oklch(26.43% 0.0137 247.97)",
+          "oklch(37.86% 0.0137 247.97)",
+          "oklch(49.29% 0.0137 247.97)",
+          "oklch(60.71% 0.0137 247.97)",
+          "oklch(72.14% 0.0137 247.97)",
+          "oklch(83.57% 0.0137 247.97)",
+          "oklch(95.00% 0.0137 247.97)"
+        ]
+      },
+      "paper-dark": {
+        "role": "neutral",
+        "displayName": "Sky canvas · dark",
+        "tonalRamp": [
+          "oklch(15.00% 0.0431 253.78)",
+          "oklch(26.43% 0.0431 253.78)",
+          "oklch(37.86% 0.0431 253.78)",
+          "oklch(49.29% 0.0431 253.78)",
+          "oklch(60.71% 0.0431 253.78)",
+          "oklch(72.14% 0.0431 253.78)",
+          "oklch(83.57% 0.0431 253.78)",
+          "oklch(95.00% 0.0431 253.78)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Navy ink",
+        "tonalRamp": [
+          "oklch(15.00% 0.0795 259.46)",
+          "oklch(26.43% 0.0795 259.46)",
+          "oklch(37.86% 0.0795 259.46)",
+          "oklch(49.29% 0.0795 259.46)",
+          "oklch(60.71% 0.0795 259.46)",
+          "oklch(72.14% 0.0795 259.46)",
+          "oklch(83.57% 0.0795 259.46)",
+          "oklch(95.00% 0.0795 259.46)"
+        ]
+      },
+      "ink-dark": {
+        "role": "neutral",
+        "displayName": "Navy ink · dark",
+        "tonalRamp": [
+          "oklch(15.00% 0.0132 262.38)",
+          "oklch(26.43% 0.0132 262.38)",
+          "oklch(37.86% 0.0132 262.38)",
+          "oklch(49.29% 0.0132 262.38)",
+          "oklch(60.71% 0.0132 262.38)",
+          "oklch(72.14% 0.0132 262.38)",
+          "oklch(83.57% 0.0132 262.38)",
+          "oklch(95.00% 0.0132 262.38)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Quiet blue",
+        "tonalRamp": [
+          "oklch(15.00% 0.0593 259.26)",
+          "oklch(26.43% 0.0593 259.26)",
+          "oklch(37.86% 0.0593 259.26)",
+          "oklch(49.29% 0.0593 259.26)",
+          "oklch(60.71% 0.0593 259.26)",
+          "oklch(72.14% 0.0593 259.26)",
+          "oklch(83.57% 0.0593 259.26)",
+          "oklch(95.00% 0.0593 259.26)"
+        ]
+      },
+      "muted-dark": {
+        "role": "neutral",
+        "displayName": "Quiet blue · dark",
+        "tonalRamp": [
+          "oklch(15.00% 0.0368 253.48)",
+          "oklch(26.43% 0.0368 253.48)",
+          "oklch(37.86% 0.0368 253.48)",
+          "oklch(49.29% 0.0368 253.48)",
+          "oklch(60.71% 0.0368 253.48)",
+          "oklch(72.14% 0.0368 253.48)",
+          "oklch(83.57% 0.0368 253.48)",
+          "oklch(95.00% 0.0368 253.48)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Inset sky",
+        "tonalRamp": [
+          "oklch(15.00% 0.0253 249.96)",
+          "oklch(26.43% 0.0253 249.96)",
+          "oklch(37.86% 0.0253 249.96)",
+          "oklch(49.29% 0.0253 249.96)",
+          "oklch(60.71% 0.0253 249.96)",
+          "oklch(72.14% 0.0253 249.96)",
+          "oklch(83.57% 0.0253 249.96)",
+          "oklch(95.00% 0.0253 249.96)"
+        ]
+      },
+      "surface-dark": {
+        "role": "neutral",
+        "displayName": "Inset sky · dark",
+        "tonalRamp": [
+          "oklch(15.00% 0.0519 251.76)",
+          "oklch(26.43% 0.0519 251.76)",
+          "oklch(37.86% 0.0519 251.76)",
+          "oklch(49.29% 0.0519 251.76)",
+          "oklch(60.71% 0.0519 251.76)",
+          "oklch(72.14% 0.0519 251.76)",
+          "oklch(83.57% 0.0519 251.76)",
+          "oklch(95.00% 0.0519 251.76)"
+        ]
+      },
+      "tint": {
+        "role": "primary",
+        "displayName": "Action blue",
+        "tonalRamp": [
+          "oklch(15.00% 0.1409 254.26)",
+          "oklch(26.43% 0.1409 254.26)",
+          "oklch(37.86% 0.1409 254.26)",
+          "oklch(49.29% 0.1409 254.26)",
+          "oklch(60.71% 0.1409 254.26)",
+          "oklch(72.14% 0.1409 254.26)",
+          "oklch(83.57% 0.1409 254.26)",
+          "oklch(95.00% 0.1409 254.26)"
+        ]
+      },
+      "tint-dark": {
+        "role": "primary",
+        "displayName": "Action blue · dark",
+        "tonalRamp": [
+          "oklch(15.00% 0.0818 241.78)",
+          "oklch(26.43% 0.0818 241.78)",
+          "oklch(37.86% 0.0818 241.78)",
+          "oklch(49.29% 0.0818 241.78)",
+          "oklch(60.71% 0.0818 241.78)",
+          "oklch(72.14% 0.0818 241.78)",
+          "oklch(83.57% 0.0818 241.78)",
+          "oklch(95.00% 0.0818 241.78)"
+        ]
+      },
+      "tile-green": {
+        "role": "secondary",
+        "displayName": "Solved group one",
+        "tonalRamp": [
+          "oklch(15.00% 0.0263 242.75)",
+          "oklch(26.43% 0.0263 242.75)",
+          "oklch(37.86% 0.0263 242.75)",
+          "oklch(49.29% 0.0263 242.75)",
+          "oklch(60.71% 0.0263 242.75)",
+          "oklch(72.14% 0.0263 242.75)",
+          "oklch(83.57% 0.0263 242.75)",
+          "oklch(95.00% 0.0263 242.75)"
+        ]
+      },
+      "tile-green-dark": {
+        "role": "secondary",
+        "displayName": "Solved group one · dark",
+        "tonalRamp": [
+          "oklch(15.00% 0.0642 251.15)",
+          "oklch(26.43% 0.0642 251.15)",
+          "oklch(37.86% 0.0642 251.15)",
+          "oklch(49.29% 0.0642 251.15)",
+          "oklch(60.71% 0.0642 251.15)",
+          "oklch(72.14% 0.0642 251.15)",
+          "oklch(83.57% 0.0642 251.15)",
+          "oklch(95.00% 0.0642 251.15)"
+        ]
+      },
+      "tile-gold": {
+        "role": "secondary",
+        "displayName": "Solved group two",
+        "tonalRamp": [
+          "oklch(15.00% 0.0191 263.01)",
+          "oklch(26.43% 0.0191 263.01)",
+          "oklch(37.86% 0.0191 263.01)",
+          "oklch(49.29% 0.0191 263.01)",
+          "oklch(60.71% 0.0191 263.01)",
+          "oklch(72.14% 0.0191 263.01)",
+          "oklch(83.57% 0.0191 263.01)",
+          "oklch(95.00% 0.0191 263.01)"
+        ]
+      },
+      "tile-gold-dark": {
+        "role": "secondary",
+        "displayName": "Solved group two · dark",
+        "tonalRamp": [
+          "oklch(15.00% 0.0540 257.22)",
+          "oklch(26.43% 0.0540 257.22)",
+          "oklch(37.86% 0.0540 257.22)",
+          "oklch(49.29% 0.0540 257.22)",
+          "oklch(60.71% 0.0540 257.22)",
+          "oklch(72.14% 0.0540 257.22)",
+          "oklch(83.57% 0.0540 257.22)",
+          "oklch(95.00% 0.0540 257.22)"
+        ]
+      },
+      "tile-blue": {
+        "role": "secondary",
+        "displayName": "Solved group three",
+        "tonalRamp": [
+          "oklch(15.00% 0.0235 250.08)",
+          "oklch(26.43% 0.0235 250.08)",
+          "oklch(37.86% 0.0235 250.08)",
+          "oklch(49.29% 0.0235 250.08)",
+          "oklch(60.71% 0.0235 250.08)",
+          "oklch(72.14% 0.0235 250.08)",
+          "oklch(83.57% 0.0235 250.08)",
+          "oklch(95.00% 0.0235 250.08)"
+        ]
+      },
+      "tile-blue-dark": {
+        "role": "secondary",
+        "displayName": "Solved group three · dark",
+        "tonalRamp": [
+          "oklch(15.00% 0.0762 256.73)",
+          "oklch(26.43% 0.0762 256.73)",
+          "oklch(37.86% 0.0762 256.73)",
+          "oklch(49.29% 0.0762 256.73)",
+          "oklch(60.71% 0.0762 256.73)",
+          "oklch(72.14% 0.0762 256.73)",
+          "oklch(83.57% 0.0762 256.73)",
+          "oklch(95.00% 0.0762 256.73)"
+        ]
+      },
+      "tile-rose": {
+        "role": "secondary",
+        "displayName": "Solved group four",
+        "tonalRamp": [
+          "oklch(15.00% 0.0207 254.92)",
+          "oklch(26.43% 0.0207 254.92)",
+          "oklch(37.86% 0.0207 254.92)",
+          "oklch(49.29% 0.0207 254.92)",
+          "oklch(60.71% 0.0207 254.92)",
+          "oklch(72.14% 0.0207 254.92)",
+          "oklch(83.57% 0.0207 254.92)",
+          "oklch(95.00% 0.0207 254.92)"
+        ]
+      },
+      "tile-rose-dark": {
+        "role": "secondary",
+        "displayName": "Solved group four · dark",
+        "tonalRamp": [
+          "oklch(15.00% 0.0656 259.11)",
+          "oklch(26.43% 0.0656 259.11)",
+          "oklch(37.86% 0.0656 259.11)",
+          "oklch(49.29% 0.0656 259.11)",
+          "oklch(60.71% 0.0656 259.11)",
+          "oklch(72.14% 0.0656 259.11)",
+          "oklch(83.57% 0.0656 259.11)",
+          "oklch(95.00% 0.0656 259.11)"
+        ]
+      },
+      "deck-blue": {
+        "role": "primary",
+        "displayName": "Deep Cut blue",
+        "tonalRamp": [
+          "oklch(15.00% 0.1770 255.25)",
+          "oklch(26.43% 0.1770 255.25)",
+          "oklch(37.86% 0.1770 255.25)",
+          "oklch(49.29% 0.1770 255.25)",
+          "oklch(60.71% 0.1770 255.25)",
+          "oklch(72.14% 0.1770 255.25)",
+          "oklch(83.57% 0.1770 255.25)",
+          "oklch(95.00% 0.1770 255.25)"
+        ]
+      },
+      "deck-mint": {
+        "role": "secondary",
+        "displayName": "Ballpark mint",
+        "tonalRamp": [
+          "oklch(15.00% 0.1344 163.65)",
+          "oklch(26.43% 0.1344 163.65)",
+          "oklch(37.86% 0.1344 163.65)",
+          "oklch(49.29% 0.1344 163.65)",
+          "oklch(60.71% 0.1344 163.65)",
+          "oklch(72.14% 0.1344 163.65)",
+          "oklch(83.57% 0.1344 163.65)",
+          "oklch(95.00% 0.1344 163.65)"
+        ]
+      },
+      "deck-yellow": {
+        "role": "secondary",
+        "displayName": "Little Cryptic yellow",
+        "tonalRamp": [
+          "oklch(15.00% 0.1547 90.73)",
+          "oklch(26.43% 0.1547 90.73)",
+          "oklch(37.86% 0.1547 90.73)",
+          "oklch(49.29% 0.1547 90.73)",
+          "oklch(60.71% 0.1547 90.73)",
+          "oklch(72.14% 0.1547 90.73)",
+          "oklch(83.57% 0.1547 90.73)",
+          "oklch(95.00% 0.1547 90.73)"
+        ]
+      },
+      "deck-lilac": {
+        "role": "secondary",
+        "displayName": "Five Letters lilac",
+        "tonalRamp": [
+          "oklch(15.00% 0.1655 297.38)",
+          "oklch(26.43% 0.1655 297.38)",
+          "oklch(37.86% 0.1655 297.38)",
+          "oklch(49.29% 0.1655 297.38)",
+          "oklch(60.71% 0.1655 297.38)",
+          "oklch(72.14% 0.1655 297.38)",
+          "oklch(83.57% 0.1655 297.38)",
+          "oklch(95.00% 0.1655 297.38)"
+        ]
+      },
+      "deck-coral": {
+        "role": "secondary",
+        "displayName": "Fourfold coral",
+        "tonalRamp": [
+          "oklch(15.00% 0.1773 18.48)",
+          "oklch(26.43% 0.1773 18.48)",
+          "oklch(37.86% 0.1773 18.48)",
+          "oklch(49.29% 0.1773 18.48)",
+          "oklch(60.71% 0.1773 18.48)",
+          "oklch(72.14% 0.1773 18.48)",
+          "oklch(83.57% 0.1773 18.48)",
+          "oklch(95.00% 0.1773 18.48)"
+        ]
+      },
+      "deck-slate": {
+        "role": "secondary",
+        "displayName": "Mini Sudoku slate",
+        "tonalRamp": [
+          "oklch(15.00% 0.0626 256.22)",
+          "oklch(26.43% 0.0626 256.22)",
+          "oklch(37.86% 0.0626 256.22)",
+          "oklch(49.29% 0.0626 256.22)",
+          "oklch(60.71% 0.0626 256.22)",
+          "oklch(72.14% 0.0626 256.22)",
+          "oklch(83.57% 0.0626 256.22)",
+          "oklch(95.00% 0.0626 256.22)"
+        ]
+      },
+      "card-navy": {
+        "role": "neutral",
+        "displayName": "Card navy",
+        "tonalRamp": [
+          "oklch(15.00% 0.0814 260.89)",
+          "oklch(26.43% 0.0814 260.89)",
+          "oklch(37.86% 0.0814 260.89)",
+          "oklch(49.29% 0.0814 260.89)",
+          "oklch(60.71% 0.0814 260.89)",
+          "oklch(72.14% 0.0814 260.89)",
+          "oklch(83.57% 0.0814 260.89)",
+          "oklch(95.00% 0.0814 260.89)"
+        ]
+      },
+      "white": {
+        "role": "neutral",
+        "displayName": "Card white",
+        "tonalRamp": [
+          "oklch(15.00% 0.0000 89.88)",
+          "oklch(26.43% 0.0000 89.88)",
+          "oklch(37.86% 0.0000 89.88)",
+          "oklch(49.29% 0.0000 89.88)",
+          "oklch(60.71% 0.0000 89.88)",
+          "oklch(72.14% 0.0000 89.88)",
+          "oklch(83.57% 0.0000 89.88)",
+          "oklch(95.00% 0.0000 89.88)"
+        ]
+      },
+      "collection-navy": {
+        "role": "neutral",
+        "displayName": "Collection navy",
+        "tonalRamp": [
+          "oklch(15.00% 0.0862 259.79)",
+          "oklch(26.43% 0.0862 259.79)",
+          "oklch(37.86% 0.0862 259.79)",
+          "oklch(49.29% 0.0862 259.79)",
+          "oklch(60.71% 0.0862 259.79)",
+          "oklch(72.14% 0.0862 259.79)",
+          "oklch(83.57% 0.0862 259.79)",
+          "oklch(95.00% 0.0862 259.79)"
+        ]
+      },
+      "collection-rim": {
+        "role": "primary",
+        "displayName": "Collection blue rim",
+        "tonalRamp": [
+          "oklch(15.00% 0.1866 255.71)",
+          "oklch(26.43% 0.1866 255.71)",
+          "oklch(37.86% 0.1866 255.71)",
+          "oklch(49.29% 0.1866 255.71)",
+          "oklch(60.71% 0.1866 255.71)",
+          "oklch(72.14% 0.1866 255.71)",
+          "oklch(83.57% 0.1866 255.71)",
+          "oklch(95.00% 0.1866 255.71)"
+        ]
+      },
+      "word-correct": {
+        "role": "secondary",
+        "displayName": "Correct-position green",
+        "tonalRamp": [
+          "oklch(15.00% 0.0955 159.48)",
+          "oklch(26.43% 0.0955 159.48)",
+          "oklch(37.86% 0.0955 159.48)",
+          "oklch(49.29% 0.0955 159.48)",
+          "oklch(60.71% 0.0955 159.48)",
+          "oklch(72.14% 0.0955 159.48)",
+          "oklch(83.57% 0.0955 159.48)",
+          "oklch(95.00% 0.0955 159.48)"
+        ]
+      },
+      "word-present": {
+        "role": "secondary",
+        "displayName": "Present-letter gold",
+        "tonalRamp": [
+          "oklch(15.00% 0.1082 70.77)",
+          "oklch(26.43% 0.1082 70.77)",
+          "oklch(37.86% 0.1082 70.77)",
+          "oklch(49.29% 0.1082 70.77)",
+          "oklch(60.71% 0.1082 70.77)",
+          "oklch(72.14% 0.1082 70.77)",
+          "oklch(83.57% 0.1082 70.77)",
+          "oklch(95.00% 0.1082 70.77)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "brand": {
+        "displayName": "Brand",
+        "purpose": "Header X only."
+      },
+      "display": {
+        "displayName": "Display",
+        "purpose": "Large answers and score summaries."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Game invitations and front-leaf titles."
+      },
+      "question": {
+        "displayName": "Question",
+        "purpose": "Questions and clues."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Front-leaf invitations."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Rules and explanations."
+      },
+      "input": {
+        "displayName": "Input",
+        "purpose": "Native answer entry."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Primary native actions."
+      },
+      "support": {
+        "displayName": "Support",
+        "purpose": "Instructions and feedback."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Compact game metadata."
+      }
+    },
+    "native": {
+      "platform": "iOS 17+",
+      "implementation": "SwiftUI",
+      "sources": [
+        "DailyArcade/Views/ArcadeRootView.swift",
+        "DailyArcade/Views/Theme.swift",
+        "DailyArcade/Views/GameScreen.swift",
+        "DailyArcade/Views/CollectionSheet.swift",
+        "DailyArcade/Views/*GameView.swift",
+        "DailyArcade/Resources/Assets.xcassets"
+      ],
+      "appearanceMapping": {
+        "paper": {
+          "light": "{colors.paper}",
+          "dark": "{colors.paper-dark}"
+        },
+        "ink": {
+          "light": "{colors.ink}",
+          "dark": "{colors.ink-dark}"
+        },
+        "muted": {
+          "light": "{colors.muted}",
+          "dark": "{colors.muted-dark}"
+        },
+        "surface": {
+          "light": "{colors.surface}",
+          "dark": "{colors.surface-dark}"
+        },
+        "tint": {
+          "light": "{colors.tint}",
+          "dark": "{colors.tint-dark}"
+        },
+        "tile-green": {
+          "light": "{colors.tile-green}",
+          "dark": "{colors.tile-green-dark}"
+        },
+        "tile-gold": {
+          "light": "{colors.tile-gold}",
+          "dark": "{colors.tile-gold-dark}"
+        },
+        "tile-blue": {
+          "light": "{colors.tile-blue}",
+          "dark": "{colors.tile-blue-dark}"
+        },
+        "tile-rose": {
+          "light": "{colors.tile-rose}",
+          "dark": "{colors.tile-rose-dark}"
+        }
+      },
+      "fixedAppearanceColors": [
+        "deck-blue",
+        "deck-mint",
+        "deck-yellow",
+        "deck-lilac",
+        "deck-coral",
+        "deck-slate",
+        "card-navy",
+        "white",
+        "collection-navy",
+        "collection-rim",
+        "word-correct",
+        "word-present"
+      ],
+      "units": "Native geometry uses points; semantic typography scales with Dynamic Type. CSS snippets use pixels only as portable panel illustrations.",
+      "colorConversion": "Asset sRGB components rounded to nearest 8-bit hex; code-defined fixed colors preserve percentage RGB.",
+      "panelTranslation": "HTML/CSS snippets illustrate native materials only. They are not app source, native interaction evidence, or approved replacement UI. Synthesized OKLCH ramps are panel metadata, not source tokens.",
+      "evidenceLedger": ".impeccable/native-build.json",
+      "webGates": "Retired for this native app; never report CSS measurements, web-font matching, HTML scaffold/detector, or raster UI plate checks as passed.",
+      "rearLeafHeader": "Rounded heavy callout title, bold body SF Symbol, zero vertical padding; horizontal padding remains 18pt."
+    },
+    "shadows": [
+      {
+        "name": "front-leaf",
+        "value": "SwiftUI shadow(color: black.opacity(0.13), radius: 13, x: 0, y: 12)",
+        "purpose": "Structural separation for the active leaf."
+      },
+      {
+        "name": "rear-leaf",
+        "value": "SwiftUI shadow(color: black.opacity(0.04), radius: 4, x: 0, y: 4)",
+        "purpose": "Quiet separation for rear leaves."
+      },
+      {
+        "name": "leaf-rim",
+        "value": "same fill; brightness(-0.16); offset(y: 7pt)",
+        "purpose": "Tactile card thickness."
+      },
+      {
+        "name": "collection-rim",
+        "value": "{colors.collection-rim}; offset(y: 5pt)",
+        "purpose": "Tactile base for the circular collection control."
+      }
+    ],
+    "motion": [
+      {
+        "name": "deck-cycle",
+        "value": "spring(response: 0.44, dampingFraction: 0.78)",
+        "purpose": "Settle the next or previous game; nil animation with Reduce Motion."
+      },
+      {
+        "name": "drag-return",
+        "value": "spring(response: 0.38, dampingFraction: 0.8)",
+        "purpose": "Return an insufficient drag to rest; nil animation with Reduce Motion."
+      },
+      {
+        "name": "deck-geometry",
+        "value": "front z rotation 2.4° + drag.width/45; rear z rotation depth × -1.3°; x-axis tilt depth × 3° + front drag.height/22; bottom anchor; perspective 0.42; scale 1 - depth × 0.019",
+        "purpose": "Open-fold topology; transforms set to zero or static scale under Reduce Motion as implemented."
+      },
+      {
+        "name": "direct-drag",
+        "value": "front x = drag.width × 0.55; front y += drag.height × 0.35; minimumDistance 16pt; cycle threshold 45pt on dominant axis",
+        "purpose": "Direct manipulation, selection haptic; drag offsets disabled with Reduce Motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "readable-home-list",
+        "value": "DynamicTypeSize >= .xxLarge OR available height < 600pt"
+      },
+      {
+        "name": "compact-leaf-preview",
+        "value": "leaf height < 330pt: preview 125pt; otherwise 160pt"
+      },
+      {
+        "name": "tagline-hidden",
+        "value": "DynamicTypeSize >= .xxLarge"
+      },
+      {
+        "name": "gesture-instruction-hidden",
+        "value": "DynamicTypeSize.isAccessibilitySize"
+      }
+    ],
+    "accessibility": {
+      "deck": "Front card only: button activation and adjustable increment/decrement. Rear leaves and decorative progress/preview shapes hidden.",
+      "fallback": "Native scrollable game buttons preserve title and status.",
+      "reduceMotion": "No animated cycling, 3D tilt, planar rotation, or direct drag transforms. Static depth scaling and leaf offsets remain.",
+      "feedback": "Combined progress labels, frequent-update feedback, word-position result descriptions, Sudoku coordinate/value/notes/selection labels.",
+      "navigation": "Native NavigationStack, sheets, segmented picker, toolbar controls, TextField, confirmationDialog and ShareLink.",
+      "header": "X uses fixedSize and layoutPriority(1); visual progress text scales through xxxLarge while preserving a complete completion-count accessibility label."
+    }
+  },
+  "components": [
+    {
+      "name": "Primary action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Portable light-appearance illustration of ActionButtonStyle; native focus and state behavior remain authoritative.",
+      "html": "<button class=\"ds-action\">Check answer</button>",
+      "css": ".ds-action{font-family:system-ui,-apple-system,sans-serif;font-size:17px;font-weight:600;width:100%;padding:15px 0;color:#EFF7FF;background:#135CA9;border:0;border-radius:14px}.ds-action:active{opacity:.75}.ds-action:disabled{opacity:.42}.ds-action:focus-visible{outline:2px solid #135CA9;outline-offset:3px}.ds-action:hover{filter:brightness(.98)}"
+    },
+    {
+      "name": "Answer field",
+      "kind": "input",
+      "refersTo": "answer-input",
+      "description": "Native input surface and explicit muted prompt, translated for the panel.",
+      "html": "<input class=\"ds-input\" aria-label=\"Five-letter word\" placeholder=\"Five-letter word\">",
+      "css": ".ds-input{font-family:system-ui,-apple-system,sans-serif;font-size:20px;padding:16px;background:#DDEBFA;color:#102951;border:0;border-radius:14px;max-width:100%}.ds-input::placeholder{color:#4B6081;opacity:1}.ds-input:focus-visible{outline:2px solid #135CA9;outline-offset:2px}.ds-input:hover{filter:brightness(.99)}"
+    },
+    {
+      "name": "Game leaf",
+      "kind": "card",
+      "refersTo": "game-leaf",
+      "description": "A blue front-leaf material sample; the native SwiftUI deck owns layout, gestures, and perspective.",
+      "html": "<button class=\"ds-leaf\"><strong>Deep Cut</strong><span>Go for the unexpected.</span><small>7 rounds · 25 seconds each</small></button>",
+      "css": ".ds-leaf{font-family:system-ui,-apple-system,sans-serif;display:flex;flex-direction:column;gap:18px;text-align:left;padding:18px;border:1.5px solid #ffffff5c;border-radius:24px;color:white;background:rgb(3.5% 43% 83%);box-shadow:0 7px 0 #0657ac,0 12px 13px #00000021;width:290px;min-height:240px}.ds-leaf strong{font-size:28px;font-weight:800}.ds-leaf span{font-size:20px;font-weight:800;margin-top:auto}.ds-leaf:focus-visible{outline:3px solid #102951;outline-offset:5px}.ds-leaf:hover{filter:brightness(1.02)}.ds-leaf:active{opacity:.9}"
+    },
+    {
+      "name": "Result panel",
+      "kind": "card",
+      "refersTo": "result-panel",
+      "description": "Tonal game container; native ShareLink supplies the share action.",
+      "html": "<div class=\"ds-result\"><strong>Nicely done.</strong><p>1 of 6 daily games completed.</p><button>Share result</button></div>",
+      "css": ".ds-result{font-family:system-ui,-apple-system,sans-serif;padding:20px;border-radius:18px;background:#DDEBFA;color:#102951}.ds-result strong{font-size:22px;font-weight:800}.ds-result p{font-size:15px;color:#4B6081}.ds-result button{font:600 17px system-ui;color:#135CA9;background:none;border:0;min-height:44px}.ds-result button:hover{text-decoration:underline}.ds-result button:focus-visible{outline:2px solid #135CA9;outline-offset:2px}.ds-result button:active{opacity:.75}"
+    },
+    {
+      "name": "Collection circle",
+      "kind": "nav",
+      "refersTo": "collection-control",
+      "description": "Single home navigation affordance; SVG is a panel-only layered-card illustration, not a shipped SF Symbol replacement.",
+      "html": "<button class=\"ds-collection\" aria-label=\"Open collection\"><svg width=\"28\" height=\"28\" viewBox=\"0 0 28 28\" fill=\"none\" aria-hidden=\"true\"><path d=\"m3 9 11-6 11 6-11 6L3 9Zm0 5 11 6 11-6M3 19l11 6 11-6\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/></svg></button>",
+      "css": ".ds-collection{display:grid;place-items:center;width:62px;height:62px;border:0;border-radius:50%;color:white;background:rgb(3.5% 14% 31%);box-shadow:0 5px 0 rgb(8% 47% 90%)}.ds-collection:hover{filter:brightness(1.08)}.ds-collection:active{transform:translateY(2px)}.ds-collection:focus-visible{outline:3px solid #135CA9;outline-offset:6px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Joyful, tactile puzzle cards",
+    "overview": "X feels like a handful of bright puzzle cards: friendly rounded type, visible edges, and direct manipulation. Saturated leaves sit on a quiet adaptive sky canvas. The open fold gives the collection its identity; readable native game screens give each puzzle room to work.\n\nSwiftUI draws every interface surface, diagram, word tile, and control. SF Symbols, system navigation, native sheets, and Dynamic Type are part of this iPhone design language. The approved open-fold direction replaces the earlier glossy and serif explorations.",
+    "keyCharacteristics": [
+      "Bright game-specific leaves with a tactile lower rim.",
+      "Rounded native headlines with plain, readable supporting text.",
+      "One collection circle and native navigation.",
+      "Equivalent readable access through Dynamic Type, VoiceOver, and Reduce Motion."
+    ],
+    "rules": [
+      {
+        "name": "Readable Fold Rule",
+        "body": "Keep every rear game title visible; switch to the native list when text size or available height makes the fold unsuitable.",
+        "section": "layout"
+      },
+      {
+        "name": "Native Surface Rule",
+        "body": "Build text, diagrams, and controls in SwiftUI; keep raster imagery out of the interface.",
+        "section": "components"
+      },
+      {
+        "name": "Honest Color Rule",
+        "body": "Game colors identify leaves; completion, selection, and answer feedback must also have readable text or accessibility descriptions.",
+        "section": "colors"
+      }
+    ],
+    "dos": [
+      "Do use the adaptive named colors for page text, inputs, and supporting surfaces.",
+      "Do preserve visible rear headers, the bottom hinge, opposing leaf angles, and one collection circle on the deck.",
+      "Do use native semantic text styles for functional copy and retain the readable list fallback.",
+      "Do announce actual progress and provide VoiceOver adjustment and activation for the front card.",
+      "Do respect Reduce Motion and use native navigation, sheets, keyboards, and sharing."
+    ],
+    "donts": [
+      "Don't add a tab bar or a separate Play button to the home deck.",
+      "Don't rasterize interface text, cards, diagrams, or controls.",
+      "Don't replace the approved rounded native language with the retired serif or glossy explorations.",
+      "Don't use a preview diagram as evidence of a player's progress.",
+      "Don't treat web-only composition gates as native verification."
+    ]
+  }
+}

@@ -7,11 +7,11 @@ Checked 2026-11-02. These are mechanic references, not licensed content feeds:
 - https://www.minutecryptic.com/ — a daily cryptic clue and learning tools.
 - https://www.linkedin.com/games/ — additional daily logic formats including Mini Sudoku.
 
-Daily Arcade has original names, clues and question text. It does not embed these sites or use their daily answers, artwork, logos or APIs. No affiliation is claimed.
+X has original names, clues and question text. It does not embed these sites or use their daily answers, artwork, logos or APIs. No affiliation is claimed.
 
 ## Starter library
 
-The Swift content bank is `DailyArcade/Core/PuzzleContent.swift`. It ships a rotating editorial starter library, not an infinite editorial service. Cryptics rotate after the number of clues in `cryptics`; word answers rotate after `wordAnswers.count` days. Trivia chooses seven prompts from the available bank; Fourfold chooses four disjoint authored groups. The content selection is deterministic and versioned by the app, so keep previous bank order stable when adding published content. Sudoku generates a uniquely solvable board from the UTC day. Ballpark combines factual math questions and date-varying numerical scenarios.
+The Swift content bank is `DailyArcade/Core/PuzzleContent.swift`. It ships a rotating editorial starter library, not an infinite editorial service. Cryptics rotate after the number of clues in `cryptics`; word answers rotate after `wordAnswers.count` days. Trivia chooses seven prompts from the available bank; Fourfold chooses four disjoint authored groups. The content selection is deterministic and versioned by the app, so keep the v1 bank order and lengths frozen; use a new versioned bank with an explicit UTC cutover day when expanding published content. Sudoku generates a uniquely solvable board from the UTC day. Ballpark combines factual math questions and date-varying numerical scenarios.
 
 All six games select a daily edition at midnight UTC, including across time zone changes. An already open game remains tied to its original edition so guesses cannot leak into the new day. Archive plays are separate from today's progress and cannot backfill streaks.
 

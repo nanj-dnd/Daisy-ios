@@ -1,0 +1,31 @@
+{
+  "workflow": "native-ios",
+  "platform": "ios",
+  "approvedComp": ".impeccable/mocks/x-open-fold.png",
+  "approval": "User: perfect",
+  "implementation": "DailyArcade/Views",
+  "nativeTranslation": "SwiftUI text, controls, countable diagrams, direct manipulation and native navigation. No raster UI.",
+  "retiredWebGates": [
+    "CSS region measurements",
+    "web font matching",
+    "HTML hero scaffold",
+    "HTML/CSS detector",
+    "raster plates for native geometry"
+  ],
+  "verification": {
+    "coreTests": "12 passed",
+    "uiFlows": "6 passed",
+    "deckCycle": "6 front cards and native navigation passed",
+    "device": "iPhone 17 Pro Simulator, iOS 26.5",
+    "physicalDevice": "not performed"
+  },
+  "review": {
+    "disposition": "fix",
+    "materialFixes": [
+      "Expose rear headers and enlarge previews",
+      "Reflow maximum Dynamic Type header and footer",
+      "Increase input prompt contrast"
+    ],
+    "status": "fix batch implemented; final recaptures and verdict pending"
+  }
+}

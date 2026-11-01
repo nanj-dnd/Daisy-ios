@@ -103,4 +103,39 @@ final class DailyEngineTests: XCTestCase {
         XCTAssertTrue(text.contains("1/6"))
         XCTAssertFalse(ResultShare.text(kind: .cryptic, edition: edition, progress: progress).contains(PuzzleContent.cryptic(for: edition).answer))
     }
+    func testTriviaDeadlineCannotBeResetAndExpiredAnswersScoreZero() {
+        let now = Date(timeIntervalSince1970: 1000)
+        let prompt = TriviaPrompt("Name a planet", ["Earth", "Uranus"])
+        var state = GameProgress()
+        TriviaRules.begin(&state, now: now)
+        TriviaRules.begin(&state, now: now.addingTimeInterval(20))
+        XCTAssertEqual(state.roundDeadline, now.addingTimeInterval(25))
+        XCTAssertFalse(TriviaRules.submit(&state, prompt: prompt, answer: "Uranus", now: now, timeout: true))
+        XCTAssertTrue(TriviaRules.submit(&state, prompt: prompt, answer: "Uranus", now: now.addingTimeInterval(26)))
+        XCTAssertEqual(state.triviaPoints, [0])
+        XCTAssertFalse(TriviaRules.submit(&state, prompt: prompt, answer: "Uranus", now: now))
+        TriviaRules.advance(&state, now: now.addingTimeInterval(30))
+        XCTAssertEqual(state.round, 1)
+        XCTAssertEqual(state.roundDeadline, now.addingTimeInterval(55))
+        for round in 1..<7 {
+            XCTAssertTrue(TriviaRules.submit(&state, prompt: prompt, answer: "Uranus", now: now.addingTimeInterval(Double(round) * 30)))
+            TriviaRules.advance(&state, now: now.addingTimeInterval(Double(round + 1) * 30))
+        }
+        XCTAssertTrue(state.completed)
+        XCTAssertTrue(state.won)
+        XCTAssertEqual(state.triviaPoints.reduce(0, +), 600)
+        XCTAssertNil(state.roundDeadline)
+    }
+
+    func testMalformedButValidJSONIsRejected() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let repository = ProgressRepository(url: folder.appendingPathComponent("save.json"))
+        var invalid = SaveData(), progress = GameProgress()
+        progress.board = [1, 2, 3]
+        invalid.set(progress, kind: .sudoku, edition: DailyEdition(day: 42))
+        try repository.save(invalid)
+        XCTAssertThrowsError(try repository.load())
+    }
+
 }

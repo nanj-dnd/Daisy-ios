@@ -45,7 +45,7 @@ public struct TriviaPrompt: Sendable {
 }
 
 public enum PuzzleContent {
-    /// This is an original rotating starter pack; add clues here for longer editorial coverage.
+    /// This is an original rotating starter pack; preserve this v1 bank and add a dated v2 bank for longer coverage.
     public static let cryptics: [CrypticClue] = [
         .init("Listen, confused, and quiet (6)", "SILENT", "Something has happened to the letters of LISTEN.", "‘Confused’ signals an anagram of LISTEN. Rearrange it to SILENT, meaning ‘quiet’."),
         .init("Ocean found in Chelsea (3)", "SEA", "Look inside one of the words.", "ChelSEA contains SEA, an ocean. ‘Found in’ signals a hidden answer."),

@@ -7,3 +7,5 @@
 - `project.yml`: reproducible XcodeGen specification. The generated `.xcodeproj` is committed so XcodeGen is optional for normal use.
 
 There are no runtime packages, network calls, analytics or account requirements. Local JSON includes a schema version; unknown formats fail safely instead of overwriting progress.
+
+The public app name is X. The internal target/module, bundle identifier and existing Git repository retain DailyArcade naming. Public naming and implementation identity are independent.
