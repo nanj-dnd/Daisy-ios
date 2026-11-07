@@ -63,11 +63,11 @@ struct CollectionSheet: View {
                                 }
                             }.padding(.vertical, 9).accessibilityElement(children: .ignore).accessibilityLabel("\(store.saveData.playedOnDays.filter { $0 > store.today.day - 7 }.count) days played in the last week")
                         }
-                        Section("About X") {
+                        Section("About Daisy") {
                             Text("Six little games. One good daily habit.").font(.headline)
                             Text("Your progress stays on this device. No account, ads, analytics, or network connection required.")
-                            Text("Deep Cut uses curated answer ratings, not live player statistics. The offline editorial starter pack rotates; future releases can add more original content.").font(.footnote).foregroundStyle(ArcadeTheme.muted)
-                            Text("Independent original puzzles inspired by familiar daily game formats. Not affiliated with Krillion, Fermi, Minute Cryptic or other publishers.").font(.footnote).foregroundStyle(ArcadeTheme.muted)
+                            Text("Krillion uses curated answer ratings, not live player statistics. The offline editorial starter pack rotates; future releases can add more original content.").font(.footnote).foregroundStyle(ArcadeTheme.muted)
+                            Text("Independent puzzles with original content, named after the daily games that inspired them. Not affiliated with or endorsed by the makers of Krillion, Fermi, Minute Cryptic, Wordle, Connections or Mini Sudoku. Those names belong to their owners.").font(.footnote).foregroundStyle(ArcadeTheme.muted)
                         }
                     }.scrollContentBackground(.hidden)
                 }
@@ -75,7 +75,7 @@ struct CollectionSheet: View {
             .background(ArcadeTheme.paper).foregroundStyle(ArcadeTheme.ink)
             .navigationTitle("Your collection").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
-        }.presentationDragIndicator(.visible)
+        }.presentationDragIndicator(.visible).presentationBackground(ArcadeTheme.paper)
     }
 }
 
@@ -89,12 +89,12 @@ struct ArchiveEditionView: View {
                 ForEach(GameKind.allCases) { kind in
                     Button { play(kind, edition) } label: {
                         HStack {
-                            Label(kind.title, systemImage: kind.symbol)
-                            Spacer(); Text(store.status(kind, edition)).font(.caption).foregroundStyle(ArcadeTheme.muted)
+                            Label { Text(kind.title).font(.headline).foregroundStyle(ArcadeTheme.ink) } icon: { Image(systemName: kind.symbol).foregroundStyle(kind.cardColor) }
+                            Spacer(minLength: 4); Text(store.status(kind, edition)).font(.caption.weight(.semibold)).foregroundStyle(ArcadeTheme.muted)
                         }.padding(.vertical, 9)
                     }
                 }
             } header: { Text(edition.dateLabel) }
-        }.navigationTitle("Edition \(edition.number)").navigationBarTitleDisplayMode(.inline)
+        }.scrollContentBackground(.hidden).background(ArcadeTheme.paper).navigationTitle("Edition \(edition.number)").navigationBarTitleDisplayMode(.inline)
     }
 }

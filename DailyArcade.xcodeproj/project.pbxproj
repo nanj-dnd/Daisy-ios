@@ -22,6 +22,7 @@
 		94521F51706EDB9268B281E1 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D1864ECC2F5ED87E0D519F /* Theme.swift */; };
 		95524EA2CFE10EBB06909A8C /* ArcadeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9469F75A1C685CD945D7D787 /* ArcadeStore.swift */; };
 		98DFA1F53906155484E952D1 /* SudokuGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A47C6EA240FCB9AB76951FCB /* SudokuGameView.swift */; };
+		98F88D1F27A778FB3341274D /* FoldDeck.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CD074FE31B589D04DCA170F /* FoldDeck.swift */; };
 		A1C13A2FDA585E026042D06F /* WordGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B75B78BB1204F4EDAA05E7A0 /* WordGameView.swift */; };
 		B4FFE0C640525C9EA38080D3 /* allowed-words.txt in Resources */ = {isa = PBXBuildFile; fileRef = 24461CA32AB032F8F4A5A9F4 /* allowed-words.txt */; };
 		B9B3C45836231CE03290992A /* DailyArcadeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADE64574582924F222E9F5C1 /* DailyArcadeApp.swift */; };
@@ -53,6 +54,7 @@
 		6B281C0FC86461450834A4D2 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		75D1864ECC2F5ED87E0D519F /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		9469F75A1C685CD945D7D787 /* ArcadeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcadeStore.swift; sourceTree = "<group>"; };
+		9CD074FE31B589D04DCA170F /* FoldDeck.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoldDeck.swift; sourceTree = "<group>"; };
 		9E4DF20E78A89C7464F6C913 /* DailyEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyEngine.swift; sourceTree = "<group>"; };
 		A47C6EA240FCB9AB76951FCB /* SudokuGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SudokuGameView.swift; sourceTree = "<group>"; };
 		AD4C824C8C611594FF6246B3 /* GroupsGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupsGameView.swift; sourceTree = "<group>"; };
@@ -83,6 +85,7 @@
 				1F64A3A32BA01FB9FB88364D /* CollectionSheet.swift */,
 				56A6EBEF4DEFFE59A20E37EC /* CrypticGameView.swift */,
 				5535C51CEF23D1C813240800 /* EstimationGameView.swift */,
+				9CD074FE31B589D04DCA170F /* FoldDeck.swift */,
 				39D845109FA7BBEB762C0DE7 /* GameScreen.swift */,
 				AD4C824C8C611594FF6246B3 /* GroupsGameView.swift */,
 				A47C6EA240FCB9AB76951FCB /* SudokuGameView.swift */,
@@ -251,6 +254,7 @@
 				B9B3C45836231CE03290992A /* DailyArcadeApp.swift in Sources */,
 				303228DE8EF5393C5E5DFB3D /* DailyEngine.swift in Sources */,
 				85BEB00E59301CFAF9EF8DC6 /* EstimationGameView.swift in Sources */,
+				98F88D1F27A778FB3341274D /* FoldDeck.swift in Sources */,
 				BF92A08B7959FB6995685E80 /* GameScreen.swift in Sources */,
 				455BEF3158E2A4D1109D19B9 /* GroupsGameView.swift in Sources */,
 				16F60BE16C1C92EC39CBF2E6 /* ProgressRepository.swift in Sources */,
@@ -280,7 +284,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				INFOPLIST_KEY_CFBundleDisplayName = X;
+				INFOPLIST_KEY_CFBundleDisplayName = Daisy;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.puzzle-games";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -462,7 +466,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				INFOPLIST_KEY_CFBundleDisplayName = X;
+				INFOPLIST_KEY_CFBundleDisplayName = Daisy;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.puzzle-games";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

@@ -1,5 +1,5 @@
 ---
-name: "X"
+name: "Daisy"
 description: "Joyful native daily puzzle cards with an open-fold deck."
 colors:
   paper: "#EFF7FF"
@@ -141,11 +141,11 @@ The palette pairs saturated game leaves with blue-tinted adaptive neutrals. Fron
 ### Primary
 
 - **Action blue** (`tint`): native actions, answer feedback, selected game controls, and progress dots. Its light and dark variants come from `AccentColor`.
-- **Deep Cut blue** (`deck-blue`): the trivia leaf, with white text. The collection's blue lower rim is a separate native color.
+- **Krillion blue** (`deck-blue`): the trivia leaf, with white text. The collection's blue lower rim is a separate native color.
 
 ### Secondary
 
-- **Ballpark mint, Little Cryptic yellow, Five Letters lilac, Fourfold coral, Mini Sudoku slate**: fixed game identity colors; all use card navy text. These leaves retain their palette in both appearances.
+- **Fermi mint, Minute Cryptic yellow, Wordle lilac, Connections coral, Mini Sudoku slate**: fixed game identity colors; all use card navy text. These leaves retain their palette in both appearances.
 - **Correct-position green / present-letter gold**: word-game feedback, with white letters. These differ from the lighter solved-group fills.
 - **Solved group fills** (`tile-green`, `tile-gold`, `tile-blue`, `tile-rose`): adaptive blue-toned surfaces used for completed word groups. Their historical asset names are not an instruction to paint them green, gold, blue, and rose.
 
@@ -168,7 +168,7 @@ Heavy rounded titles carry the playful character. Supporting instructions and in
 
 - **Brand:** fixed black-weight X mark; this is the lone header identity treatment, not a reusable functional headline size.
 - **Display:** rounded heavy `largeTitle` for large answers and score summaries.
-- **Headline:** rounded heavy `title` for game invitations and front-leaf names; rear names use rounded heavy `callout`.
+- **Headline:** rounded heavy `title` for front-leaf names, scaled to 72% on rear leaves so a name grows as its leaf arrives rather than swapping styles.
 - **Question:** rounded bold `title2` for questions and clues; rounded heavy `title2` for grid letters.
 - **Title:** rounded heavy `title3` for front-leaf invitations.
 - **Body / support:** native `body`, `callout`, and `subheadline` for rules, explanations, and metadata. Rules and several question blocks add native line spacing (5 points).
@@ -176,9 +176,9 @@ Heavy rounded titles carry the playful character. Supporting instructions and in
 
 ## Layout
 
-Home uses safe-area geometry rather than a web breakpoint grid. Header and list margins use the page spacing token. The deck width is the smaller of available width minus 44 points and 390 points. Stack height is `max(300, availableHeight - 190)`. Each header gap is `min(42, stackHeight × 0.075)`; leaf height is `min(366, stackHeight - gap × 5 - 18)`. These formulas preserve the staggered top edges rather than a pile of obscured titles.
+Home uses safe-area geometry rather than a web breakpoint grid. Header and list margins use the page spacing token. The deck width is the smaller of available width minus 44 points and 390 points. Stack height is `max(300, availableHeight - 206)` with 12 points of clearance under the header. Leaf height is `min(352, stackHeight - 36 × 5 - 9 - 14)`; each rear band is `min(44, (stackHeight - leafHeight - 9 - 14) / 5)`, and the front leaf drops a further 9 points so its 2.4-degree roll cannot cover the next title. `DeckLayout` pulls each leaf back up by exactly what its tilt foreshortens, so bands stay equal instead of compressing toward the back. These formulas preserve the staggered top edges rather than a pile of obscured titles.
 
-Front-leaf horizontal and vertical padding use the leaf token; rear leaves retain horizontal leaf padding with zero vertical padding so their callout names and body-size symbols fit the exposed band. Front conceptual previews occupy 160 points, reduced to 125 when leaf height is below 330 points. Game content scrolls inside a centered maximum width of 600 points with page padding and a 22-point primary vertical rhythm. Result panels use panel spacing; rules sheets use sheet spacing.
+Front-leaf padding uses the leaf token; a rear leaf's top padding eases to 10 points so its name sits inside the exposed band. Front conceptual previews occupy 160 points, reduced to 125 when leaf height is below 330 points. Game screens carry the game's name and date in the navigation bar and start straight into the board, inside a centered maximum width of 600 points with page padding and a 20-point primary vertical rhythm. Slogans live on the leaves, not above the boards, and each game must fit its controls on one screen without the keyboard. Result panels use panel spacing; rules sheets use sheet spacing.
 
 At `.xxLarge` Dynamic Type and above, or available home height below 600 points, use the scrollable six-game list. List rows use panel padding, panel rounding, 12-point gaps, full labels, status, and a chevron. The X identity mark keeps its intrinsic size and layout priority. Header progress visually scales only through `.xxxLarge` while its full accessibility label remains available. The decorative tagline is hidden from `.xxLarge` upward; the gesture instruction is hidden for accessibility sizes. The collection control has no redundant visible caption.
 
@@ -193,39 +193,39 @@ Depth is structural on the deck: the lower edge suggests a thick card, while ove
 - **Leaf edge:** white stroke at 36% opacity on the front and 22% on rear leaves, 1.5 points wide.
 - **Collection rim:** blue circular backing offset downward by 5 points.
 
-At rest the front rotates 2.4 degrees; rear rotation is depth multiplied by -1.3 degrees. Rear scaling decreases by 0.019 per depth from a bottom anchor. Native 3D tilt increases 3 degrees per depth with bottom anchoring and perspective 0.42. Drag translation directly modifies the front leaf. Settling uses a spring; Reduce Motion removes deck rotation, 3D tilt, direct drag transforms, and animation while preserving static depth scaling, leaf offsets, and selection changes. Exact motion values live in the sidecar.
+At rest the front rotates 2.4 degrees; rear rotation is depth multiplied by -1.3 degrees, reached by a straight blend across the first step. Rear scaling decreases by 0.019 per depth from a bottom anchor. Native 3D tilt increases 2.6 degrees per depth with bottom anchoring and perspective 0.42. Every pose is a pure function of one continuous deck position, so nothing snaps: leaf content opens with its depth, and stacking order changes while a leaf is off screen. Reduce Motion removes rotation, tilt and direct drag, and crossfades between selections. Exact motion values live in the sidecar.
 
 ## Shapes
 
-Rounded rectangles are the default language: leaf corners are the largest reused radius, panels are gentler, and fields and primary actions share control rounding. Word cells use tile rounding; group selections use group rounding. Sudoku remains a square grid with stronger box divisions. Capsules contain compact preview scores and archive labels. Circles show compact progress and the sole collection control. Shape communicates function; SF Symbols remain native icons rather than emoji or baked images.
+Rounded rectangles are the default language: leaf corners are the largest reused radius, panels are gentler, and fields and primary actions share control rounding. Word cells and keys use tile rounding; group selections use group rounding. Sudoku remains a square grid with stronger box divisions. Capsules contain compact preview scores and archive labels. Circles show compact progress and the sole collection control. Shape communicates function; SF Symbols remain native icons rather than emoji or baked images.
 
 ## Components
 
 ### Buttons
 
-Primary game actions are full-width, native headline labels on action blue, with page-background foreground and vertical padding of 15 points. `ActionButtonStyle` uses control rounding; pressed opacity is 0.75 and disabled opacity is 0.42. Secondary help, reveal, shuffle, and navigation actions use native text or toolbar buttons with at least 44-point targets where explicitly sized. There is no separate Play button on a leaf.
+Primary game actions are full-width, native headline labels on action blue, with page-background foreground and vertical padding of 15 points. `ActionButtonStyle` uses control rounding and presses to 98% scale at 85% opacity; disabled actions drop to a muted-tinted fill with readable muted text rather than a washed-out blue. Secondary actions use `TextActionStyle`: tint text with the whole 44-point row as the target. `KeyStyle` is the filled key for the Sudoku pad. There is no separate Play button on a leaf.
 
 ### Inputs / Fields
 
-`InputField` uses native `TextField`, input typography, field padding, and an inset-sky rounded background. The prompt explicitly uses the muted token. Letter answers capitalize characters and disable autocorrection; estimates use decimal input. Native focus, keyboard, and submission behavior remain authoritative. Feedback appears as a callout in the action tint and exposes frequent updates to accessibility.
+`InputField` uses native `TextField`, input typography, field padding, and an inset-sky rounded background, with an optional unit suffix inside the field. The prompt explicitly uses the muted token. Letter answers capitalize characters and disable autocorrection; estimates use decimal input. Krillion, Fermi and Minute Cryptic focus their field on arrival, because Krillion's clock is running and the keyboard belongs in the space below. Wordle has no text field: letters go straight into the board from an in-app keyboard whose keys fire on touch-down and show each letter's best result. Feedback appears as a callout in the action tint and exposes frequent updates to accessibility.
 
 ### Cards / Containers
 
-`GameLeaf` is the signature saturated card with rounded heavy name, native symbol or completion seal, a conceptual preview, invitation, and concise game format. The whole front leaf opens its game. Decorative preview dots and shapes do not represent live progress; the header's completion count and dots do. Result and estimate panels use adaptive surface fill, panel radius, and panel padding. Clues use the larger clue radius.
+`GameLeaf` is the signature saturated card with rounded heavy name, native symbol or completion seal, a conceptual preview, invitation, and concise game format. The whole front leaf opens its game. The dots under a leaf's name are real progress: rounds answered, guesses used or groups found, and absent for games without steps. Preview shapes are diagrams, not progress. Result and estimate panels use adaptive surface fill, panel radius, and panel padding. Clues use the larger clue radius.
 
 ### Navigation
 
-Home has one collection circle with a white `square.3.layers.3d` SF Symbol. It opens a native sheet with a segmented Games / Archive / You picker. Games push through `NavigationStack`; game titles are inline with a native back control and a toolbar rules button. Rules and collection use native Done buttons and visible sheet drag indicators. Result sharing uses `ShareLink`.
+Home has one collection circle with a white `square.3.layers.3d` SF Symbol. It opens a native sheet with a segmented Games / Archive / You picker. Games push through `NavigationStack`, zooming out of the front leaf with the system transition on iOS 18 and later; game titles are inline with the date beneath them, a native back control and a toolbar rules button. Rules and collection use native Done buttons and visible sheet drag indicators. Result sharing uses `ShareLink`.
 
 ### Open-fold deck
 
-Only the front leaf receives pointer events and accessibility focus. It exposes a button action plus VoiceOver adjustable next/previous selection. Drag begins after 16 points and cycles when dominant-axis displacement exceeds 45 points; a selection haptic accompanies cycling. The deck may cycle in either direction and retains actual per-game status. The large-text list provides ordinary native buttons instead of transforms.
+One gesture on the stack handles everything. A touch presses the front leaf; past 8 points of slop the deck tracks the finger without jumping. **Throw the front card:** the front leaf follows the finger one to one in any direction. A release past 90 points, or a projected throw past 160 points, sends it off the screen the way it was thrown, with the finger's speed carried into the spring; it then fades in at the back while the rest of the deck steps forward. A shorter release springs it back. Leaves swap ends only while off screen. Tapping a rear band flicks away the leaves in front of it. This replaced "cards come from below" in the Expo app on 2026-11-06, because a card that vanished at the back and floated up from under the screen read as coming from nowhere; the SwiftUI app still uses the old rise. `docs/deck-motion.html` holds the comparison. A second swipe can start while the first is still in flight. Only the front leaf receives accessibility focus; it exposes a button action plus VoiceOver adjustable next/previous selection. A selection haptic accompanies cycling. The large-text list provides ordinary native buttons instead of transforms.
 
 **The Native Surface Rule.** Build text, diagrams, and controls in SwiftUI; keep raster imagery out of the interface.
 
 ### Game feedback
 
-Word grids announce each letter's position result, not just its fill. Sudoku cells expose row, column, editability, value, notes, and selection; given digits remain legible without disabled dimming. Progress dots expose a combined completed-count label. Native confirmation dialogs handle reveals and save recovery. Do not invent a bespoke web focus, hover, or dialog system for these controls.
+Wordle tiles are square and turn over left to right on a 0.12-second stagger, with the keyboard colouring in afterwards; a rejected word shakes its row with an error haptic. Connections shakes the selected tiles on a mistake, and solved groups scale in while the grid closes up. Results wait for the board to finish before rising in. Word grids announce each letter's position result, not just its fill. Sudoku cells expose row, column, editability, value, notes, and selection; given digits remain legible without disabled dimming. Progress dots expose a combined completed-count label. Native confirmation dialogs handle reveals and save recovery. Do not invent a bespoke web focus, hover, or dialog system for these controls.
 
 ## Do's and Don'ts
 
@@ -244,3 +244,7 @@ Word grids announce each letter's position result, not just its fill. Sudoku cel
 - Don't replace the approved rounded native language with the retired serif or glossy explorations.
 - Don't use a preview diagram as evidence of a player's progress.
 - Don't treat web-only composition gates as native verification.
+
+## Game screens in the React Native app
+
+Since 2026-11-02 the deck and collection keep this document's identity, while each game screen in `mobile/` copies its original instead. Those screens follow `useGameLook` in `mobile/src/theme.ts`, not the tokens above. The SwiftUI game screens still follow this document.

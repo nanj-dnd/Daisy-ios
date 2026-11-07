@@ -48,7 +48,7 @@ public struct ProgressRepository {
 
 public enum ResultShare {
     public static func text(kind: GameKind, edition: DailyEdition, progress: GameProgress) -> String {
-        let heading = "X · \(kind.title)\n\(edition.dateLabel) · #\(edition.number)"
+        let heading = "Daisy · \(kind.title)\n\(edition.dateLabel) · #\(edition.number)"
         guard progress.completed else { return heading + "\nToday's puzzle is waiting." }
         let result: String
         switch kind {

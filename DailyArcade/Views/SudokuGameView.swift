@@ -8,14 +8,14 @@ struct SudokuGameView: View {
     @State private var feedback = ""
     @State private var showConflicts = false
     @State private var reveal = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var progress: GameProgress { store.progress(.sudoku, edition) }
     private var puzzle: SudokuPuzzle { store.sudoku(edition) }
     private var board: [Int] { progress.board.isEmpty ? puzzle.givens : progress.board }
     private var conflicts: Set<Int> { showConflicts ? SudokuPuzzle.conflicts(board) : [] }
     var body: some View {
-        VStack(alignment: .leading, spacing: 22) {
-            Text("Small grid. Big satisfaction.").font(.system(.title, design: .rounded).weight(.heavy))
-            Text("Use 1–6 once in every row, column, and 2 × 3 box.").font(.callout).foregroundStyle(ArcadeTheme.muted)
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Use 1–6 once in every row, column, and 2\u{00A0}×\u{00A0}3 box.").font(.callout).foregroundStyle(ArcadeTheme.muted)
             GeometryReader { geometry in
                 VStack(spacing: 0) {
                     ForEach(0..<6) { row in HStack(spacing: 0) {
@@ -27,6 +27,7 @@ struct SudokuGameView: View {
                                     if board[index] != 0 {
                                         Text("\(board[index])").font(.system(.title2, design: .rounded).weight(puzzle.givens[index] == 0 ? .medium : .heavy))
                                             .foregroundStyle(conflicts.contains(index) ? Color.red : (puzzle.givens[index] != 0 ? ArcadeTheme.ink : ArcadeTheme.tint))
+                                            .transition(.scale(scale: 0.6).combined(with: .opacity))
                                     } else {
                                         let notes = progress.notes[index] ?? []
                                         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 0), count: 3), spacing: 0) {
@@ -34,6 +35,8 @@ struct SudokuGameView: View {
                                         }.padding(2)
                                     }
                                 }.frame(width: geometry.size.width / 6, height: geometry.size.width / 6)
+                                    .animation(reduceMotion ? nil : .spring(response: 0.22, dampingFraction: 0.6), value: board[index])
+                                    .animation(.easeOut(duration: 0.12), value: selected)
                             }.buttonStyle(UndimmedCellStyle()).disabled(progress.completed || puzzle.givens[index] != 0)
                                 .accessibilityLabel("Row \(row + 1), column \(col + 1), \(board[index] == 0 ? "empty" : String(board[index])), \(puzzle.givens[index] == 0 ? "editable" : "given")")
                                 .accessibilityValue((progress.notes[index] ?? []).isEmpty ? "" : "Notes: \((progress.notes[index] ?? []).map(String.init).joined(separator: ", "))")
@@ -66,27 +69,29 @@ struct SudokuGameView: View {
                 }
             }.aspectRatio(1, contentMode: .fit).accessibilityIdentifier("sudoku-grid")
             if !progress.completed {
-                HStack(spacing: 4) {
+                HStack(spacing: 5) {
                     ForEach(1...6, id: \.self) { value in
-                        Button("\(value)") { enter(value) }.font(.title3.weight(.bold)).frame(maxWidth: .infinity).frame(minHeight: 48)
-                            .background(ArcadeTheme.surface, in: RoundedRectangle(cornerRadius: 10)).accessibilityLabel("Enter \(value)")
+                        Button { enter(value) } label: { Text("\(value)").font(.system(.title3, design: .rounded).weight(.heavy)) }.accessibilityLabel("Enter \(value)")
                     }
-                    Button { enter(0) } label: { Image(systemName: "delete.left").frame(maxWidth: .infinity).frame(minHeight: 48) }.accessibilityLabel("Erase selected cell")
-                }.disabled(selected == nil)
+                    Button { enter(0) } label: { Image(systemName: "delete.left").font(.body.weight(.bold)) }.accessibilityLabel("Erase selected cell")
+                }.buttonStyle(KeyStyle()).frame(height: 52).disabled(selected == nil)
                 Toggle("Pencil notes", isOn: $pencil).font(.callout.weight(.semibold))
                 HStack {
                     Button("Check for conflicts") {
                         showConflicts = true
                         feedback = SudokuPuzzle.conflicts(board).isEmpty ? "No rule conflicts so far. Keep going." : "The highlighted cells repeat a digit in a row, column, or box."
-                    }.frame(minHeight: 44)
+                    }
                     Spacer()
-                    Button("Reveal") { reveal = true }.frame(minHeight: 44)
-                }.font(.callout.bold())
+                    Button("Reveal") { reveal = true }
+                }.font(.callout.bold()).buttonStyle(TextActionStyle())
                 if selected == nil { Text("Tap an empty cell, then a number.").font(.caption).foregroundStyle(ArcadeTheme.muted) }
             }
             FeedbackLine(text: feedback)
         }
-        .onAppear { if progress.board.isEmpty { let initial = puzzle.givens; store.update(.sudoku, edition) { $0.board = initial } } }
+        .onAppear {
+            if progress.board.isEmpty { let initial = puzzle.givens; store.update(.sudoku, edition) { $0.board = initial } }
+            if !progress.completed { selected = board.firstIndex(of: 0) }
+        }
         .confirmationDialog("Reveal this grid's solution?", isPresented: $reveal, titleVisibility: .visible) {
             Button("Reveal solution") { let solution = puzzle.solution; store.update(.sudoku, edition) { $0.board = solution; $0.notes = [:]; $0.revealed = true; $0.finish(won: false) }; selected = nil }
         } message: { Text("This finishes today's grid. Your result will say that the solution was revealed.") }

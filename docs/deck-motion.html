@@ -1,0 +1,470 @@
+<title>X Deck Motion</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap">
+<style>
+/* Layout: a short diagnosis, then four live phones side by side, each running the same deck under a different motion model. */
+:root {
+  --bg: #F4F9FF;
+  --screen: #EFF7FF;
+  --ink: #102951;
+  --muted: #4B6081;
+  --line: #CFDDEE;
+  --chip: #135CA9;
+  --chip-ink: #FFFFFF;
+  --bezel: #102951;
+  --finger: rgba(16, 41, 81, 0.22);
+  --card-ink: #102951;
+  --display: "Nunito", ui-rounded, "SF Pro Rounded", system-ui, sans-serif;
+  --body: "Nunito", ui-rounded, system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #07111D; --screen: #0D1D30; --ink: #F1F6FF; --muted: #B4C6DC; --line: #1E3550;
+    --chip: #9ED5FF; --chip-ink: #07111D; --bezel: #2A4566; --finger: rgba(241, 246, 255, 0.28);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #07111D; --screen: #0D1D30; --ink: #F1F6FF; --muted: #B4C6DC; --line: #1E3550;
+  --chip: #9ED5FF; --chip-ink: #07111D; --bezel: #2A4566; --finger: rgba(241, 246, 255, 0.28);
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.page { max-width: 1320px; margin: 0 auto; padding-block: 40px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 28px; }
+header { display: grid; gap: 10px; max-width: 70ch; }
+h1 { font-family: var(--display); font-weight: 900; font-size: clamp(30px, 5vw, 44px); line-height: 1.05; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+.lede { margin: 0; color: var(--muted); font-size: 17px; }
+.why { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px 28px; margin: 0; padding: 0; list-style: none; }
+.why li { border-top: 2px solid var(--ink); padding-top: 10px; min-width: 0; }
+.why b { display: block; font-family: var(--display); font-weight: 800; font-size: 16px; }
+.why span { color: var(--muted); }
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+button { font: inherit; font-weight: 800; color: var(--ink); background: transparent; border: 2px solid var(--ink); border-radius: 999px; padding: 6px 16px; cursor: pointer; }
+button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+button:focus-visible { outline: 3px solid var(--chip); outline-offset: 2px; }
+.controls .note { color: var(--muted); font-size: 14px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 36px 24px; }
+figure { margin: 0; display: grid; gap: 14px; justify-items: center; align-content: start; min-width: 0; }
+.phone { width: 300px; max-width: 100%; height: 560px; border: 10px solid var(--bezel); border-radius: 46px; background: var(--screen); position: relative; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; }
+.phone:active { cursor: grabbing; }
+.top { position: absolute; left: 20px; right: 18px; top: 18px; display: flex; justify-content: space-between; }
+.mark { font-family: var(--display); font-weight: 900; font-size: 42px; line-height: 40px; }
+.tag { font-weight: 800; font-size: 12px; margin-top: 2px; }
+.tally { display: grid; justify-items: end; gap: 6px; padding-top: 6px; }
+.dots { display: flex; gap: 4px; }
+.dots i { width: 7px; height: 7px; border-radius: 50%; display: block; }
+.count { font-weight: 900; font-size: 13px; font-variant-numeric: tabular-nums; }
+.deck { position: absolute; left: 0; right: 0; top: 118px; height: 380px; }
+.hint { position: absolute; left: 0; right: 0; bottom: 16px; text-align: center; font-size: 12px; font-weight: 700; color: var(--muted); }
+.finger { position: absolute; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; background: var(--finger); opacity: 0; pointer-events: none; z-index: 99; }
+.place { position: absolute; left: 50%; top: 0; will-change: transform; }
+.hinge { position: absolute; inset: 0; transform-origin: 50% 100%; }
+.rim { position: absolute; left: 0; right: 0; top: 6px; bottom: -6px; border-radius: 20px; box-shadow: 0 8px 18px rgba(8, 24, 52, 0.14); }
+.leaf { position: absolute; inset: 0; border-radius: 20px; padding: 13px 14px; overflow: hidden; display: flex; flex-direction: column; box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.32); }
+.head { display: flex; align-items: center; justify-content: space-between; height: 26px; }
+.name { font-family: var(--display); font-weight: 900; font-size: 20px; line-height: 1; white-space: nowrap; transform-origin: left center; }
+.sym { font-weight: 900; font-size: 15px; opacity: 0.8; }
+.body { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.steps { display: flex; gap: 5px; margin-top: 5px; }
+.steps i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: 0.3; display: block; }
+.steps i.on { opacity: 0.95; }
+.pv { margin-top: 9px; height: 84px; display: grid; align-content: start; gap: 5px; }
+.pill { background: #FFF; border-radius: 9px; height: 22px; display: flex; align-items: center; justify-content: space-between; padding: 0 6px 0 9px; color: var(--card-ink); font-weight: 800; font-size: 11px; }
+.pill em { font-style: normal; background: #FFD84D; border-radius: 99px; padding: 0 6px; font-size: 10px; }
+.pill em.hi { background: #C9B6FF; }
+.row { display: flex; gap: 4px; }
+.tile { width: 22px; height: 22px; border-radius: 3px; background: rgba(255, 255, 255, 0.92); }
+.box { width: 24px; height: 28px; border: 2.5px solid #000; background: #FFF; margin-left: -2.5px; }
+.box:first-child { margin-left: 0; border-radius: 4px 0 0 4px; }
+.box:last-child { border-radius: 0 4px 4px 0; }
+.mini { display: grid; gap: 2px; width: max-content; }
+.mini i { width: 11px; height: 11px; background: rgba(255, 255, 255, 0.92); border-radius: 2px; display: block; }
+.big { font-family: var(--display); font-weight: 900; font-size: 26px; line-height: 1; }
+.track { height: 5px; border-radius: 3px; background: rgba(16, 41, 81, 0.25); position: relative; margin-top: 10px; }
+.track b { position: absolute; left: 34%; top: -6px; width: 17px; height: 17px; border-radius: 50%; background: #FFF; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.spacer { flex: 1; }
+.inv { font-family: var(--display); font-weight: 900; font-size: 15px; line-height: 1.2; white-space: nowrap; }
+.foot { font-size: 11px; font-weight: 700; opacity: 0.85; margin-top: 2px; white-space: nowrap; }
+figcaption { display: grid; gap: 6px; width: 300px; max-width: 100%; }
+.title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.title h2 { font-family: var(--display); font-weight: 900; font-size: 21px; margin: 0; line-height: 1.2; }
+.title .k { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.chip { background: var(--chip); color: var(--chip-ink); font-weight: 800; font-size: 12px; border-radius: 99px; padding: 2px 9px; }
+.title .now { border: 1.5px solid var(--muted); color: var(--muted); font-weight: 800; font-size: 12px; border-radius: 99px; padding: 1px 8px; }
+figcaption p { margin: 0; }
+.spec { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.read { font-family: var(--mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+.buttons { display: flex; gap: 8px; }
+.buttons button { padding: 3px 12px; font-size: 13px; }
+@media (prefers-reduced-motion: reduce) { .finger { display: none; } }
+</style>
+
+<div class="page">
+  <header>
+    <h1>Deck motion</h1>
+    <p class="lede">Four ways for X's home deck to bring in the next game. Each phone plays a swipe on a loop. Drag any deck yourself to feel how it follows your thumb.</p>
+  </header>
+
+  <ul class="why" aria-label="Why the current rise feels wrong">
+    <li><b>It comes from nowhere</b><span>The card you can see at the back vanishes, then rises from under the bottom edge of the screen.</span></li>
+    <li><b>It travels too far</b><span>It crosses most of the screen every time, so even a quick spring reads as floating up.</span></li>
+    <li><b>Your thumb doesn't hold it</b><span>Dragging moves the deck at most half a step, so the card lags behind your finger.</span></li>
+  </ul>
+
+  <div class="controls">
+    <button id="slow" type="button" aria-pressed="false">Slow motion</button>
+    <button id="pause" type="button" aria-pressed="false">Pause demos</button>
+    <span class="note" id="note">Swipe up for the next game, down to go back.</span>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<script>
+const N = 7;
+const G = { cw: 236, ch: 214, band: 25, drop: 6, persp: 852, screenH: 540, deckTop: 118 };
+const KINDS = [
+  { title: 'Krillion', c: [0.035, 0.43, 0.83], ink: '#FFFFFF', sym: '≋', steps: [7, 3], inv: 'Go for the unexpected.', foot: '7 rounds · 25 seconds each', pv: 'trivia' },
+  { title: 'Fermi', c: [0.37, 0.86, 0.66], sym: '#', steps: [3, 0], inv: 'Trust your best guess.', foot: '3 questions · One guess each', pv: 'estimation' },
+  { title: 'Minute Cryptic', c: [1, 0.83, 0.3], sym: '✓', inv: 'A little twist of thought.', foot: 'One original clue · Hints included', pv: 'cryptic' },
+  { title: 'Wordle', c: [0.68, 0.53, 0.98], sym: 'A', steps: [6, 0], inv: 'Find your five.', foot: '5 letters · 6 chances', pv: 'word' },
+  { title: 'Connections', c: [1, 0.43, 0.47], sym: '▦', steps: [4, 0], inv: 'Make the connection.', foot: '16 words · 4 hidden groups', pv: 'groups' },
+  { title: 'Mini Sudoku', c: [0.64, 0.75, 0.9], sym: '▤', inv: 'Small grid. Big satisfaction.', foot: '6 × 6 · One unique solution', pv: 'sudoku' },
+  { title: 'Zip', c: [0.96, 0.55, 0.26], sym: '✓', inv: 'Complete the path.', foot: '6 × 6 · One unbroken line', pv: 'zip' },
+];
+const rgb = (c, off = 0) => `rgb(${c.map((v) => Math.round(Math.max(0, Math.min(1, v - off)) * 255)).join(',')})`;
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const wrap = (v) => ((Math.round(v) % N) + N) % N;
+
+function preview(kind) {
+  const grid = (cols, n, fill) => `<div class="mini" style="grid-template-columns:repeat(${cols},11px)">${Array.from({ length: n }, (_, i) => `<i style="${fill ? fill(i) : ''}"></i>`).join('')}</div>`;
+  switch (kind) {
+    case 'trivia': return `<div class="pill">Obvious<em>10</em></div><div class="pill">Clever<em>50</em></div><div class="pill">Unexpected<em class="hi">100</em></div>`;
+    case 'estimation': return `<div class="big">How many?</div><div class="track"><b></b></div>`;
+    case 'cryptic': return `<div class="row" style="gap:0">${'<div class="box"></div>'.repeat(6)}</div>`;
+    case 'word': return ['#6AAA64,#FFF,#C9B458,#FFF,#FFF', '#FFF,#6AAA64,#FFF,#FFF,#C9B458'].map((r) => `<div class="row">${r.split(',').map((c) => `<div class="tile" style="background:${c}"></div>`).join('')}</div>`).join('');
+    case 'groups': return `<div class="row">${'<div class="tile" style="width:44px"></div>'.repeat(4)}</div><div class="row">${'<div class="tile" style="width:44px"></div>'.repeat(4)}</div>`;
+    case 'sudoku': return grid(6, 36);
+    case 'zip': return grid(6, 36, (i) => ([0, 1, 2, 8, 14].includes(i) ? 'background:#E8590C' : ''));
+  }
+}
+
+function slot(d) {
+  const scale = 1 - d * 0.019;
+  const tilt = d * 2.6;
+  const roll = d < 1 ? 2.4 - d * 3.7 : d * -1.3;
+  const r = (tilt * Math.PI) / 180;
+  const h = G.ch * scale;
+  const vis = (h * Math.cos(r)) / (1 + (h * Math.sin(r)) / G.persp);
+  const y = (N - 1 - d) * G.band + G.drop * Math.max(0, 1 - d) - (G.ch - vis);
+  return { x: 0, y, scale, tilt, roll, open: Math.max(0, 1 - d), layer: 10 - d, op: 1 };
+}
+
+function depthOf(index, p) {
+  let d = (p - index) % N;
+  if (d < -1) d += N;
+  if (d >= N - 1) d -= N;
+  return d;
+}
+
+const dirOf = (x, y) => ((Math.abs(y) >= Math.abs(x) ? y : x) <= 0 ? 'up' : 'down');
+const reach = G.screenH - (G.deckTop + G.band * (N - 1) + G.drop) + 46;
+const nowTravel = reach / 0.9;
+const throwDist = 600;
+
+/* Each option maps a card's trip between the front (u = 0) and the back slot (u = 1) to a pose, and says how a drag moves the deck. */
+const OPTIONS = [
+  {
+    name: 'Rise from below', badge: 'now', key: 'today',
+    text: 'The back card slips out of sight, then rises from under the screen onto the front. This is what the app does today.',
+    spec: 'spring 210/28 · drag eased, capped at half a step',
+    upStep: 1, spring: { k: 210, c: 28 }, cancel: { k: 158, c: 21.6 },
+    transit(u, exit) {
+      if (u >= 0.9) { const p = slot(N - 2 + (u - 0.9) / 0.1); p.layer = 0; return p; }
+      const p = slot(0);
+      const dist = u * nowTravel;
+      p.x += exit.dx * dist; p.y += exit.dy * dist;
+      p.roll += clamp((exit.dx * dist) / 18, -16, 16) + u * 5;
+      p.scale += 0.05 * Math.min(1, u * 3);
+      p.layer = 20;
+      return p;
+    },
+    drag(deck, x, y) {
+      const dist = Math.hypot(x, y);
+      if (!dist) return;
+      const forward = dirOf(x, y) === 'up';
+      if (forward) deck.exits[wrap(deck.target + 1)] = { dx: (-x / dist) * 0.3, dy: 1 };
+      else deck.exits[wrap(deck.target)] = { dx: x / dist, dy: y / dist };
+      const eased = 0.5 * (1 - Math.exp(-(dist / nowTravel) / 0.5));
+      deck.p = deck.drag.origin + (forward ? eased : -eased);
+    },
+    release(deck, x, y, vx, vy) {
+      const tx = x + vx * 0.22, ty = y + vy * 0.22;
+      const steps = dirOf(tx, ty) === 'up' ? 1 : -1;
+      const committed = Math.hypot(tx, ty) > 170 || (dirOf(x, y) === dirOf(tx, ty) && Math.hypot(x, y) > 72);
+      if (!committed) return deck.go(0, this.cancel, 0);
+      deck.go(steps, this.spring, steps * Math.min(4, Math.hypot(vx, vy) / nowTravel));
+    },
+  },
+  {
+    name: 'Flip to the back', badge: 'pick', key: 'flip',
+    text: 'Swipe up and the front card tips back over the deck, then stands up as the back tab. Swipe down pulls the back card over onto the front. You can see the card the whole way.',
+    spec: 'spring 300/32 · drag 1:1, 260pt per card',
+    upStep: -1, travel: 260, spring: { k: 300, c: 32 },
+    transit(u) {
+      const a = slot(0), b = slot(N - 1);
+      const p = slot(0);
+      p.y = lerp(a.y, b.y, u) - Math.sin(Math.PI * u) * G.ch * 0.32;
+      // Edge-on at the top of the arc, which is where it swaps from in front of the deck to behind it.
+      p.tilt = u < 0.5 ? lerp(a.tilt, 88, u / 0.5) : lerp(88, b.tilt, (u - 0.5) / 0.5);
+      p.scale = lerp(a.scale, b.scale, u) + 0.03 * Math.sin(Math.PI * u);
+      p.roll = lerp(a.roll, b.roll, u);
+      p.open = 1 - u;
+      p.layer = u < 0.5 ? 20 : 0;
+      return p;
+    },
+  },
+  {
+    name: 'Lift away', key: 'lift',
+    text: 'The front card lifts toward you and fades out. The rest of the deck steps forward one card at a time, and the lifted card fades back in at the back. The shortest, quietest move.',
+    spec: 'spring 420/38 · drag 1:1, 160pt · 22ms stagger',
+    upStep: -1, travel: 160, spring: { k: 420, c: 38 }, cascade: 22,
+    transit(u) {
+      if (u < 0.5) {
+        const p = slot(0), k = u / 0.5;
+        p.y -= k * 40; p.scale += k * 0.07; p.tilt -= k * 6; p.op = 1 - k; p.layer = 20;
+        return p;
+      }
+      const p = slot(N - 1), k = (u - 0.5) / 0.5;
+      p.y -= (1 - k) * 14; p.op = k; p.layer = 0;
+      return p;
+    },
+  },
+  {
+    name: 'Throw it', key: 'throw',
+    text: 'The front card sticks to your thumb in any direction and flies off wherever you throw it, then fades in at the back. The most playful option, but the card leaves the screen.',
+    spec: 'spring 260/30 · card follows finger 1:1',
+    upStep: -1, spring: { k: 260, c: 30 },
+    transit(u, exit) {
+      if (u < 0.8) {
+        const p = slot(0), dist = (u / 0.8) * throwDist;
+        p.x += exit.dx * dist; p.y += exit.dy * dist;
+        p.roll += clamp((exit.dx * dist) / 14, -22, 22) + u * 4;
+        p.layer = 20;
+        return p;
+      }
+      const p = slot(N - 1);
+      p.op = (u - 0.8) / 0.2; p.layer = 0;
+      return p;
+    },
+    drag(deck, x, y) {
+      const dist = Math.hypot(x, y);
+      if (!dist) return;
+      deck.exits[wrap(deck.target)] = { dx: x / dist, dy: y / dist };
+      deck.p = deck.drag.origin - Math.min(0.79, (dist / throwDist) * 0.8);
+    },
+    release(deck, x, y, vx, vy) {
+      const dist = Math.hypot(x, y), speed = Math.hypot(vx, vy);
+      const thrown = Math.hypot(x + vx * 0.22, y + vy * 0.22);
+      if (thrown < 160 && dist < 90) return deck.go(0, this.spring, 0);
+      deck.go(-1, this.spring, -Math.min(6, (speed * 0.8) / throwDist));
+    },
+  },
+];
+
+/* Linear drag shared by the options that track the finger along one axis. */
+function linearDrag(deck, x, y) {
+  const o = deck.opt;
+  const along = -(Math.abs(y) >= Math.abs(x) ? y : x);
+  let delta = along / o.travel;
+  if (Math.abs(delta) > 1) delta = Math.sign(delta) * (1 + (Math.abs(delta) - 1) * 0.2);
+  deck.p = deck.drag.origin + o.upStep * delta;
+}
+function linearRelease(deck, x, y, vx, vy) {
+  const o = deck.opt;
+  const vertical = Math.abs(y) >= Math.abs(x);
+  const along = -(vertical ? y : x), speed = -(vertical ? vy : vx);
+  const thrown = along + speed * 0.22;
+  const committed = Math.abs(thrown) > 110 || (Math.sign(along) === Math.sign(thrown) && Math.abs(along) > 48);
+  if (!committed) return deck.go(0, o.spring, 0);
+  const steps = thrown > 0 ? o.upStep : -o.upStep;
+  deck.go(steps, o.spring, Math.sign(steps) * Math.min(6, Math.abs(speed) / o.travel));
+}
+
+let timeScale = 1;
+let demos = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+class Deck {
+  constructor(opt, index) {
+    this.opt = opt;
+    this.p = 0; this.v = 0; this.target = 0;
+    this.spring = opt.spring;
+    this.exits = Array.from({ length: N }, () => ({ dx: 0, dy: opt.key === 'throw' ? -1 : 1 }));
+    this.drag = null; this.fake = null;
+    this.t = 0; this.releaseAt = null; this.hist = [];
+    this.nextDemo = 0.9 + index * 0.45; this.demoCount = 0; this.idleUntil = 0;
+    this.build(index);
+  }
+  build(index) {
+    const o = this.opt;
+    const fig = document.createElement('figure');
+    const badge = o.badge === 'pick' ? '<span class="chip">Recommended</span>' : o.badge === 'now' ? '<span class="now">Current</span>' : '';
+    fig.innerHTML = `
+      <div class="phone" role="application" aria-label="${o.name} demo. Drag up or down to move the deck.">
+        <div class="top">
+          <div><div class="mark">X</div><div class="tag">Your daily brain break.</div></div>
+          <div class="tally"><div class="dots">${KINDS.map((k, i) => `<i style="background:${rgb(k.c)};opacity:${i === 2 || i === 6 ? 1 : 0.3}"></i>`).join('')}</div><div class="count">2 of 7</div></div>
+        </div>
+        <div class="deck"></div>
+        <div class="finger"></div>
+        <div class="hint">Swipe to unfold. Tap to play.</div>
+      </div>
+      <figcaption>
+        <div class="title"><h2>${o.name}</h2>${badge}</div>
+        <p>${o.text}</p>
+        <div class="spec">${o.spec}</div>
+        <div class="read" aria-live="polite">Settles in — ms</div>
+        <div class="buttons"><button type="button" data-a="back">Back</button><button type="button" data-a="next">Next</button></div>
+      </figcaption>`;
+    document.getElementById('grid').appendChild(fig);
+    this.phone = fig.querySelector('.phone');
+    this.deck = fig.querySelector('.deck');
+    this.finger = fig.querySelector('.finger');
+    this.readout = fig.querySelector('.read');
+    this.cards = KINDS.map((k) => {
+      const ink = k.ink || 'var(--card-ink)';
+      const el = document.createElement('div');
+      el.className = 'place';
+      el.style.cssText = `width:${G.cw}px;height:${G.ch}px;margin-left:${-G.cw / 2}px`;
+      const steps = k.steps ? `<div class="steps">${Array.from({ length: k.steps[0] }, (_, i) => `<i class="${i < k.steps[1] ? 'on' : ''}"></i>`).join('')}</div>` : '';
+      el.innerHTML = `<div class="hinge"><div class="rim" style="background:${rgb(k.c, 0.16)}"></div><div class="leaf" style="background:${rgb(k.c)};color:${ink}">
+        <div class="head"><div class="name">${k.title}</div><div class="sym">${k.sym}</div></div>
+        <div class="body">${steps}<div class="pv">${preview(k.pv)}</div><div class="spacer"></div><div class="inv">${k.inv}</div><div class="foot">${k.foot}</div></div></div></div>`;
+      this.deck.appendChild(el);
+      return { el, hinge: el.firstChild, body: el.querySelector('.body'), head: el.querySelector('.head'), name: el.querySelector('.name') };
+    });
+    fig.querySelector('[data-a="next"]').onclick = () => { this.idle(); this.go(this.opt.upStep, this.opt.spring, 0); };
+    fig.querySelector('[data-a="back"]').onclick = () => { this.idle(); this.go(-this.opt.upStep, this.opt.spring, 0); };
+    this.phone.addEventListener('pointerdown', (e) => {
+      this.idle(); this.fake = null;
+      this.phone.setPointerCapture(e.pointerId);
+      this.sx = e.clientX; this.sy = e.clientY;
+      this.begin();
+      this.move(0, 0, performance.now());
+    });
+    this.phone.addEventListener('pointermove', (e) => { if (this.drag && !this.fake) this.move(e.clientX - this.sx, e.clientY - this.sy, performance.now()); });
+    const up = () => { if (this.drag && !this.fake) this.end(); };
+    this.phone.addEventListener('pointerup', up);
+    this.phone.addEventListener('pointercancel', up);
+  }
+  idle() { this.idleUntil = this.t + 7; }
+  go(steps, spring, v) {
+    this.target += steps; this.spring = spring; this.v = v; this.releaseAt = this.t;
+  }
+  begin() { this.drag = { origin: this.p, x: 0, y: 0, samples: [] }; this.v = 0; this.releaseAt = null; }
+  move(x, y, ms) {
+    const d = this.drag;
+    d.x = x; d.y = y;
+    d.samples.push({ x, y, ms });
+    while (d.samples.length > 2 && ms - d.samples[0].ms > 90) d.samples.shift();
+    (this.opt.drag || linearDrag).call(this.opt, this, x, y);
+  }
+  end() {
+    const d = this.drag, s = d.samples, a = s[0], b = s[s.length - 1];
+    const span = Math.max(0.001, (b.ms - a.ms) / 1000) * (this.fake ? 1 : timeScale);
+    const vx = (b.x - a.x) / span, vy = (b.y - a.y) / span;
+    this.drag = null;
+    (this.opt.release || linearRelease).call(this.opt, this, d.x, d.y, vx, vy);
+  }
+  /** A scripted swipe, fed through the same drag path as a real finger. */
+  demo() {
+    const n = this.demoCount++;
+    const down = n % 4 === 3 && this.opt.key !== 'throw';
+    const sign = down ? 1 : -1;
+    const side = this.opt.key === 'throw' ? (n % 2 ? 26 : -26) : 0;
+    this.fake = { start: this.t, dur: 0.16, dx: side, dy: sign * 95 };
+    this.begin();
+    this.move(0, 0, 0);
+  }
+  step(dt) {
+    this.t += dt;
+    if (this.fake) {
+      const f = this.fake, k = Math.min(1, (this.t - f.start) / f.dur);
+      this.move(f.dx * k, f.dy * k, (this.t - f.start) * 1000);
+      this.finger.style.opacity = 1;
+      this.finger.style.transform = `translate(${140 + f.dx * k}px, ${400 + f.dy * k}px)`;
+      if (k >= 1) { this.end(); this.fake = null; this.fingerFade = this.t; }
+    } else if (this.fingerFade !== undefined) {
+      const k = Math.min(1, (this.t - this.fingerFade) / 0.25);
+      this.finger.style.opacity = 1 - k;
+      if (k >= 1) this.fingerFade = undefined;
+    }
+    if (!this.drag) {
+      const { k, c } = this.spring;
+      let rest = dt;
+      while (rest > 0) {
+        const h = Math.min(rest, 1 / 240);
+        this.v += (-k * (this.p - this.target) - c * this.v) * h;
+        this.p += this.v * h;
+        rest -= h;
+      }
+      if (Math.abs(this.p - this.target) < 0.0008 && Math.abs(this.v) < 0.004) {
+        this.p = this.target; this.v = 0;
+        if (this.releaseAt !== null) { this.readout.textContent = `Settles in ${Math.round((this.t - this.releaseAt) * 1000)} ms`; this.releaseAt = null; }
+      }
+      if (demos && !this.fake && this.t > this.idleUntil && this.t >= this.nextDemo && this.p === this.target) { this.demo(); this.nextDemo = this.t + 2.4; }
+    }
+    if (this.opt.cascade) {
+      this.hist.push([this.t, this.p]);
+      while (this.hist.length > 2 && this.t - this.hist[1][0] > 0.2) this.hist.shift();
+    }
+    this.render();
+  }
+  delayed(seconds) {
+    const at = this.t - seconds, h = this.hist;
+    for (let i = h.length - 1; i > 0; i--) {
+      if (h[i - 1][0] <= at) {
+        const [t0, p0] = h[i - 1], [t1, p1] = h[i];
+        return t1 === t0 ? p1 : lerp(p0, p1, (at - t0) / (t1 - t0));
+      }
+    }
+    return h.length ? h[0][1] : this.p;
+  }
+  render() {
+    this.cards.forEach((card, i) => {
+      let p = this.p;
+      if (this.opt.cascade) { const d0 = depthOf(i, p); if (d0 > 0) p = this.delayed((d0 * this.opt.cascade) / 1000); }
+      const d = depthOf(i, p);
+      const pose = d >= 0 ? slot(d) : this.opt.transit(-d, this.exits[i]);
+      card.el.style.transform = `translate3d(${pose.x}px, ${pose.y}px, 0) rotate(${pose.roll}deg)`;
+      card.el.style.zIndex = Math.ceil(pose.layer);
+      card.el.style.opacity = pose.op;
+      card.hinge.style.transform = `perspective(${G.persp}px) rotateX(${pose.tilt}deg) scale(${pose.scale})`;
+      card.body.style.opacity = pose.open * pose.open;
+      card.name.style.transform = `scale(${0.72 + 0.28 * pose.open})`;
+      // Closed leaves lift their title into the strip that shows above the next leaf.
+      card.head.style.transform = `translateY(${(pose.open - 1) * 9}px)`;
+    });
+  }
+}
+
+const decks = OPTIONS.map((o, i) => new Deck(o, i));
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000) * timeScale;
+  last = now;
+  decks.forEach((d) => d.step(dt));
+  requestAnimationFrame(frame);
+}
+decks.forEach((d) => d.render());
+requestAnimationFrame(frame);
+
+const slow = document.getElementById('slow'), pause = document.getElementById('pause');
+pause.setAttribute('aria-pressed', String(!demos));
+slow.onclick = () => { timeScale = timeScale === 1 ? 0.25 : 1; slow.setAttribute('aria-pressed', String(timeScale !== 1)); };
+pause.onclick = () => { demos = !demos; pause.setAttribute('aria-pressed', String(!demos)); };
+</script>

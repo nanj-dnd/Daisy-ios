@@ -5,11 +5,11 @@ public enum GameKind: String, Codable, CaseIterable, Identifiable, Sendable {
     public var id: String { rawValue }
     public var title: String {
         switch self {
-        case .trivia: return "Deep Cut"
-        case .estimation: return "Ballpark"
-        case .cryptic: return "Little Cryptic"
-        case .word: return "Five Letters"
-        case .groups: return "Fourfold"
+        case .trivia: return "Krillion"
+        case .estimation: return "Fermi"
+        case .cryptic: return "Minute Cryptic"
+        case .word: return "Wordle"
+        case .groups: return "Connections"
         case .sudoku: return "Mini Sudoku"
         }
     }

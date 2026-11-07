@@ -258,7 +258,7 @@
       },
       "deck-blue": {
         "role": "primary",
-        "displayName": "Deep Cut blue",
+        "displayName": "Krillion blue",
         "tonalRamp": [
           "oklch(15.00% 0.1770 255.25)",
           "oklch(26.43% 0.1770 255.25)",
@@ -272,7 +272,7 @@
       },
       "deck-mint": {
         "role": "secondary",
-        "displayName": "Ballpark mint",
+        "displayName": "Fermi mint",
         "tonalRamp": [
           "oklch(15.00% 0.1344 163.65)",
           "oklch(26.43% 0.1344 163.65)",
@@ -286,7 +286,7 @@
       },
       "deck-yellow": {
         "role": "secondary",
-        "displayName": "Little Cryptic yellow",
+        "displayName": "Minute Cryptic yellow",
         "tonalRamp": [
           "oklch(15.00% 0.1547 90.73)",
           "oklch(26.43% 0.1547 90.73)",
@@ -300,7 +300,7 @@
       },
       "deck-lilac": {
         "role": "secondary",
-        "displayName": "Five Letters lilac",
+        "displayName": "Wordle lilac",
         "tonalRamp": [
           "oklch(15.00% 0.1655 297.38)",
           "oklch(26.43% 0.1655 297.38)",
@@ -314,7 +314,7 @@
       },
       "deck-coral": {
         "role": "secondary",
-        "displayName": "Fourfold coral",
+        "displayName": "Connections coral",
         "tonalRamp": [
           "oklch(15.00% 0.1773 18.48)",
           "oklch(26.43% 0.1773 18.48)",
@@ -561,24 +561,44 @@
     ],
     "motion": [
       {
-        "name": "deck-cycle",
-        "value": "spring(response: 0.44, dampingFraction: 0.78)",
-        "purpose": "Settle the next or previous game; nil animation with Reduce Motion."
+        "name": "deck-position",
+        "value": "one continuous position; depth = position - index wrapped to [-1, 5); -1 and 5 are the same rear slot, and raising position deals the rear leaf from below",
+        "purpose": "Every leaf pose is a pure function of this value, so drags, releases and interrupted swipes share one motion."
       },
       {
-        "name": "drag-return",
-        "value": "spring(response: 0.38, dampingFraction: 0.8)",
-        "purpose": "Return an insufficient drag to rest; nil animation with Reduce Motion."
+        "name": "deck-commit",
+        "value": "interpolatingSpring(stiffness: 210, damping: 28), initialVelocity from the finger, capped at 4",
+        "purpose": "Finish a swipe at the finger's speed; a crossfade replaces it with Reduce Motion."
+      },
+      {
+        "name": "deck-settle",
+        "value": "spring(response: 0.5, dampingFraction: 0.86); 0.62 response when a tap moves more than one step",
+        "purpose": "Return an uncommitted drag to rest, or bring a tapped rear leaf forward."
+      },
+      {
+        "name": "deck-tracking",
+        "value": "interactiveSpring(response: 0.13, dampingFraction: 0.9); 8pt slop subtracted; progress = distance / travel, eased to a 0.5 ceiling; commit past 72pt dragged or 170pt projected",
+        "purpose": "Direct manipulation that merges with a leaf still in flight; drag tracking disabled with Reduce Motion."
       },
       {
         "name": "deck-geometry",
-        "value": "front z rotation 2.4° + drag.width/45; rear z rotation depth × -1.3°; x-axis tilt depth × 3° + front drag.height/22; bottom anchor; perspective 0.42; scale 1 - depth × 0.019",
-        "purpose": "Open-fold topology; transforms set to zero or static scale under Reduce Motion as implemented."
+        "value": "front z rotation 2.4°; rear z rotation depth × -1.3°; x-axis tilt depth × 2.6°; bottom anchor; perspective 0.42; scale 1 - depth × 0.019; off-stack path is linear along the swipe, or straight up from below when dealing, clearing the screen edge at t = 0.9; the last 0.1 slips behind the stack",
+        "purpose": "Open-fold topology with equal bands; rotation and tilt are zero under Reduce Motion."
       },
       {
-        "name": "direct-drag",
-        "value": "front x = drag.width × 0.55; front y += drag.height × 0.35; minimumDistance 16pt; cycle threshold 45pt on dominant axis",
-        "purpose": "Direct manipulation, selection haptic; drag offsets disabled with Reduce Motion."
+        "name": "tile-turn",
+        "value": "easeInOut(0.32), 0.12s stagger per tile, colours swap edge-on",
+        "purpose": "Reveal a Wordle guess in reading order; no rotation with Reduce Motion."
+      },
+      {
+        "name": "reject-shake",
+        "value": "linear(0.38), 7pt sine, two oscillations",
+        "purpose": "Refuse a word or a wrong group, paired with an error haptic; removed with Reduce Motion."
+      },
+      {
+        "name": "game-step",
+        "value": "spring(response: 0.42, dampingFraction: 0.88)",
+        "purpose": "Move between rounds and bring in the result panel; opacity only with Reduce Motion."
       }
     ],
     "breakpoints": [
@@ -630,7 +650,7 @@
       "kind": "card",
       "refersTo": "game-leaf",
       "description": "A blue front-leaf material sample; the native SwiftUI deck owns layout, gestures, and perspective.",
-      "html": "<button class=\"ds-leaf\"><strong>Deep Cut</strong><span>Go for the unexpected.</span><small>7 rounds · 25 seconds each</small></button>",
+      "html": "<button class=\"ds-leaf\"><strong>Krillion</strong><span>Go for the unexpected.</span><small>7 rounds · 25 seconds each</small></button>",
       "css": ".ds-leaf{font-family:system-ui,-apple-system,sans-serif;display:flex;flex-direction:column;gap:18px;text-align:left;padding:18px;border:1.5px solid #ffffff5c;border-radius:24px;color:white;background:rgb(3.5% 43% 83%);box-shadow:0 7px 0 #0657ac,0 12px 13px #00000021;width:290px;min-height:240px}.ds-leaf strong{font-size:28px;font-weight:800}.ds-leaf span{font-size:20px;font-weight:800;margin-top:auto}.ds-leaf:focus-visible{outline:3px solid #102951;outline-offset:5px}.ds-leaf:hover{filter:brightness(1.02)}.ds-leaf:active{opacity:.9}"
     },
     {
