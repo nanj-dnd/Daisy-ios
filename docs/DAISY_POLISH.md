@@ -94,3 +94,19 @@ text home header grows with its tally/countdown, keeping them above the list.
 Captures live in ignored `build/daisy-fonts/`. Typecheck, lint, the typography
 detector, `git diff --check` and the production iOS export pass. This change has
 not been published to the Expo tester channel or checked on a physical phone.
+
+## Home top-gap follow-up
+
+A simulator review link opened while Collection was presented could push Home
+onto the modal stack. Home then inherited the sheet's presentation and applied
+its own top safe-area padding, creating the large blank area above the wordmark.
+Review links now reset to their complete parsed stack (Home, or Home plus Game)
+instead of navigating on top of the current screen. The entry points remain
+development-only; Collection retains its normal sheet presentation.
+
+Verified on the iPhone 17 Pro Simulator: Home from an existing modal stack,
+Collection → Home review link, Collection → archive Wordle review link → Back.
+Home returns full-screen with the expected status-bar clearance. Captures are
+`build/daisy-review/home-root-fixed.png` and
+`build/daisy-review/home-after-link-and-back.png`. Typecheck, lint and
+`git diff --check` pass. No save data or game layout was changed.
