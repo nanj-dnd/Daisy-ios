@@ -26,6 +26,7 @@ export const cardNavy = navy;
 
 
 export const fonts = {
+  editorial: 'DaisyEditorial', sans: 'DaisySans',
   pixel: 'VT323_400Regular', hand: 'Caveat_700Bold', chunky: 'Sansita_800ExtraBold_Italic', mulish: 'Mulish_400Regular', mulishBold: 'Mulish_700Bold', montserrat: 'Montserrat_300Light',
   serif: Platform.select({ ios: 'Georgia', default: 'serif' }), plain: Platform.select({ ios: 'Helvetica Neue', default: 'sans-serif' }),
 };
@@ -61,6 +62,20 @@ export const type = {
   subheadline: { fontSize: 15 },
   footnote: { fontSize: 13 },
   caption: { fontSize: 12 },
+} satisfies Record<string, TextStyle>;
+
+/** Daisy's home/collection voice. Game screens retain their own established type. */
+export const shellType = {
+  display: { ...type.display, fontFamily: fonts.editorial, fontWeight: '700' },
+  title: { ...type.title, fontFamily: fonts.editorial, fontWeight: '700' },
+  question: { ...type.question, fontFamily: fonts.sans },
+  subtitle: { ...type.subtitle, fontFamily: fonts.sans, fontWeight: '700' },
+  headline: { ...type.headline, fontFamily: fonts.sans },
+  body: { ...type.body, fontFamily: fonts.sans },
+  callout: { ...type.callout, fontFamily: fonts.sans },
+  subheadline: { ...type.subheadline, fontFamily: fonts.sans },
+  footnote: { ...type.footnote, fontFamily: fonts.sans },
+  caption: { ...type.caption, fontFamily: fonts.sans },
 } satisfies Record<string, TextStyle>;
 
 export const springs = {

@@ -20,14 +20,18 @@ import { HomeScreen } from './src/screens/HomeScreen';
 import { RulesScreen } from './src/screens/RulesScreen';
 import { social } from './src/social/store';
 import { store } from './src/store';
-import { type, useColors } from './src/theme';
+import { fonts, shellType as type, useColors } from './src/theme';
 
 const Stack = createNativeStackNavigator<RootStack>();
 
 export default function App() {
   // Only readiness: rebuilding the navigator on every store update re-creates the native header, which cancels touches.
   const ready = useSyncExternalStore(store.subscribe, () => store.ready);
-  const [fontsLoaded, fontError] = useFonts({ VT323_400Regular, Caveat_700Bold, Sansita_800ExtraBold_Italic, Mulish_400Regular, Mulish_700Bold, Montserrat_300Light });
+  const [fontsLoaded, fontError] = useFonts({
+    VT323_400Regular, Caveat_700Bold, Sansita_800ExtraBold_Italic, Mulish_400Regular, Mulish_700Bold, Montserrat_300Light,
+    DaisyEditorial: require('./assets/fonts/Fraunces-Soft.ttf'),
+    DaisySans: require('./assets/fonts/DM-Sans.ttf'),
+  });
   const colors = useColors();
   const scheme = useColorScheme();
 
@@ -59,7 +63,7 @@ export default function App() {
               <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
               <Stack.Screen name="Game" component={GameScreen} options={{ headerShown: false, gestureEnabled: true }} />
               <Stack.Screen name="Rules" component={RulesScreen} options={({ navigation }) => ({ presentation: 'modal', title: 'How to play', headerRight: done(navigation) })} />
-              <Stack.Screen name="Collection" component={CollectionScreen} options={({ navigation }) => ({ presentation: 'modal', title: 'Your collection', headerRight: done(navigation) })} />
+              <Stack.Screen name="Collection" component={CollectionScreen} options={({ navigation }) => ({ presentation: 'modal', title: 'Your collection', headerTitleStyle: { fontFamily: fonts.editorial, fontSize: 20, fontWeight: '600' }, headerRight: done(navigation) })} />
             </Stack.Navigator>
           </NavigationContainer>
         )}

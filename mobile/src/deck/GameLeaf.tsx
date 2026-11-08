@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { SharedValue, useAnimatedStyle, useDerivedValue } from 'react-native-reanimated';
 import { GameKind, GameProgress, games } from '../core/engine';
-import { cardColor, cardRim, cardText, rounded, type } from '../theme';
+import { cardColor, cardRim, cardText, fonts, shellType as type } from '../theme';
 import { GameSymbol } from '../ui';
 import { CardPreview } from './CardPreview';
 import { DeckLayout, Exit, deckCount, depthOf, perspective, poseOf } from './layout';
@@ -65,7 +65,7 @@ export const GameLeaf = memo(function GameLeaf({ kind, index, progress, layout, 
         <Animated.View style={[styles.rim, { backgroundColor: cardRim(kind) }, lift]} />
         <View style={[styles.leaf, { backgroundColor: cardColor(kind) }]}>
           <Animated.View style={[styles.header, header]}>
-            <Animated.Text numberOfLines={1} style={[styles.name, { color: ink }, title]}>{games[kind].title}</Animated.Text>
+            <Animated.Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.72} style={[styles.name, { color: ink }, title]}>{games[kind].title}</Animated.Text>
             <Animated.View style={[styles.symbol, symbol]}>
               <GameSymbol kind={kind} size={24} color={ink} done={progress.completed} />
             </Animated.View>
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   leaf: { flex: 1, borderRadius: radius, borderCurve: 'continuous', paddingHorizontal: 18, paddingTop: 18, paddingBottom: 18, overflow: 'hidden' },
   edge: { ...StyleSheet.absoluteFill, borderRadius: radius, borderCurve: 'continuous', borderWidth: 1.5, borderColor: '#FFFFFF' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: 34 },
-  name: { ...rounded, fontSize: 28, fontWeight: '800', flexShrink: 1, transformOrigin: 'left' },
+  name: { fontFamily: fonts.editorial, fontSize: 28, lineHeight: 34, fontWeight: '700', flex: 1, marginRight: 12, transformOrigin: 'left' },
   symbol: { opacity: 0.8, transformOrigin: 'right' },
   body: { flex: 1 },
   steps: { flexDirection: 'row', gap: 7, marginTop: 6 },

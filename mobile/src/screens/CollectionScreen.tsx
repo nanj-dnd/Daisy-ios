@@ -7,7 +7,7 @@ import { GameKind, dateLabel, editionNumber, firstEditionDay, gameKinds, games, 
 import { RootStack } from '../navigation';
 import { useArcade } from '../store';
 import { FriendsPanel } from './FriendsPanel';
-import { cardColor, type, useColors } from '../theme';
+import { cardColor, fonts, shellType as type, useColors } from '../theme';
 import { GameSymbol, Icon, TextAction, useCountdown } from '../ui';
 
 // The package's class typings predate the React 19 JSX types.
@@ -31,7 +31,7 @@ function GameRow({ kind, day, onPress, last }: { kind: GameKind; day: number; on
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`${games[kind].title}, ${arcade.status(kind, day)}`} style={({ pressed }) => [styles.row, !last && { borderBottomColor: `${colors.muted}33`, borderBottomWidth: StyleSheet.hairlineWidth }, pressed && { opacity: 0.6 }]}>
       <View style={styles.symbol}><GameSymbol kind={kind} size={21} color={cardColor(kind)} /></View>
       <View style={styles.rowText}>
-        <Text style={[type.headline, { color: colors.ink }]}>{games[kind].title}</Text>
+        <Text style={[type.headline, styles.gameName, { color: colors.ink }]}>{games[kind].title}</Text>
         <Text style={[type.subheadline, { color: colors.muted }]}>{games[kind].subtitle}</Text>
       </View>
       <Text style={[type.caption, styles.status, { color: colors.muted }]}>{arcade.status(kind, day)}</Text>
@@ -108,7 +108,7 @@ export function CollectionScreen() {
               return (
                 <Pressable key={entry.first} onPress={() => setPack(entry.first)} accessibilityRole="button" accessibilityLabel={`${monthLabel(entry.first)} pack, ${done} of ${total} puzzles done`} style={({ pressed }) => [styles.row, index < packs.length - 1 && { borderBottomColor: `${colors.muted}33`, borderBottomWidth: StyleSheet.hairlineWidth }, pressed && { opacity: 0.6 }]}>
                   <View style={styles.rowText}>
-                    <Text style={[type.headline, { color: colors.ink }]}>{monthLabel(entry.first)}</Text>
+                    <Text style={[type.headline, styles.gameName, { color: colors.ink }]}>{monthLabel(entry.first)}</Text>
                     <Text style={[type.caption, { color: colors.muted }]}>{entry.days.length} edition{entry.days.length === 1 ? '' : 's'} · {total} puzzles</Text>
                     <View style={[styles.bar, { backgroundColor: `${colors.muted}26` }]}>
                       <View style={[styles.barFill, { width: `${(done / total) * 100}%`, backgroundColor: colors.tint }]} />
@@ -193,7 +193,8 @@ const styles = StyleSheet.create({
   picker: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12 },
   content: { paddingHorizontal: 16, paddingBottom: 32, gap: 24 },
   section: { gap: 8 },
-  header: { paddingHorizontal: 16, fontWeight: '600' },
+  header: { paddingHorizontal: 16, fontFamily: fonts.editorial, fontSize: 20, fontWeight: '600' },
+  gameName: { fontFamily: fonts.editorial, fontWeight: '600', fontSize: 19 },
   footer: { paddingHorizontal: 16 },
   group: { borderRadius: 16, borderCurve: 'continuous', overflow: 'hidden' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, paddingVertical: 14 },
@@ -212,5 +213,5 @@ const styles = StyleSheet.create({
   weekday: { width: `${100 / 7}%`, textAlign: 'center', fontWeight: '600', marginBottom: 6 },
   cell: { width: `${100 / 7}%`, alignItems: 'center', paddingVertical: 3 },
   dayCircle: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
-  dayCount: { fontSize: 10, fontWeight: '600', fontVariant: ['tabular-nums'], marginTop: 1 },
+  dayCount: { fontFamily: fonts.sans, fontSize: 10, fontWeight: '600', fontVariant: ['tabular-nums'], marginTop: 1 },
 });

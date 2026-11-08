@@ -161,6 +161,16 @@ The palette pairs saturated game leaves with blue-tinted adaptive neutrals. Fron
 
 ## Typography
 
+**React Native Daisy update, 2026-11-08:** the approved C direction pairs soft
+Fraunces with DM Sans. Fraunces carries the Daisy wordmark, home deck game names,
+collection headings and archive pack names; DM Sans carries shell copy, counts
+and shared controls. Game-specific display lettering and puzzle glyphs retain
+their existing fonts. `mobile/src/theme.ts` separates this shell ramp from game
+type. Both font assets ship locally, preserve weight selection and keep text
+scaling enabled for functional copy. See `mobile/assets/fonts/README.md` for
+sources and the tuned Fraunces axes. The SF description below records the
+earlier SwiftUI design.
+
 **Display Font:** Apple's system rounded face (SF Pro Rounded).
 **Body Font:** Apple's system default face (SF Pro).
 

@@ -9,7 +9,7 @@ import { FoldDeck } from '../deck/FoldDeck';
 import { DeckLayout, deckCount } from '../deck/layout';
 import { RootStack } from '../navigation';
 import { useArcade } from '../store';
-import { cardColor, cardText, rounded, type, useColors } from '../theme';
+import { cardColor, cardText, fonts, shellType as type, useColors } from '../theme';
 import { GameSymbol, Icon, Press, TextAction, useCountdown } from '../ui';
 
 const frontDrop = 9;
@@ -47,7 +47,7 @@ export function HomeScreen() {
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.paper, paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-      <View style={styles.header}>
+      <View style={[styles.header, listOnly && styles.listHeader]}>
         <View>
           <Text style={[styles.mark, { color: colors.ink }]} accessibilityRole="header" allowFontScaling={false}>Daisy</Text>
           {window.fontScale < 1.35 && <Text style={[type.subheadline, styles.tagline, { color: colors.ink }]}>Your daily brain break.</Text>}
@@ -87,7 +87,7 @@ export function HomeScreen() {
             <Press key={kind} onPress={() => open(kind)} scale={0.98} style={[styles.row, { backgroundColor: cardColor(kind) }]} accessibilityLabel={`${games[kind].title}, ${arcade.status(kind, day)}`}>
               <GameSymbol kind={kind} size={22} color={cardText(kind)} />
               <View style={styles.rowText}>
-                <Text style={[type.headline, { color: cardText(kind) }]}>{games[kind].title}</Text>
+                <Text style={[type.headline, styles.gameName, { color: cardText(kind) }]}>{games[kind].title}</Text>
                 <Text style={[type.callout, { color: cardText(kind) }]}>{arcade.status(kind, day)}</Text>
               </View>
               <Icon name="chevron.right" size={16} color={cardText(kind)} fallback="›" />
@@ -114,7 +114,9 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   header: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 22, height: headerHeight },
-  mark: { ...rounded, fontSize: 50, lineHeight: 62, fontWeight: '900', letterSpacing: -0.5 },
+  listHeader: { height: 'auto', minHeight: headerHeight, paddingBottom: 16 },
+  mark: { fontFamily: fonts.editorial, fontSize: 50, lineHeight: 62, fontWeight: '700', letterSpacing: -0.5 },
+  gameName: { fontFamily: fonts.editorial, fontWeight: '600', fontSize: 20 },
   tagline: { fontWeight: '700', marginTop: 1 },
   tally: { alignItems: 'flex-end', gap: 7, paddingTop: 12 },
   tallyDots: { flexDirection: 'row', gap: 6 },

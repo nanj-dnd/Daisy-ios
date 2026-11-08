@@ -4,7 +4,7 @@ import { gameKinds, games } from '../core/engine';
 import { dailyTable, rankGame } from '../social/standings';
 import { useSocial } from '../social/store';
 import { useArcade } from '../store';
-import { cardColor, type, useColors } from '../theme';
+import { cardColor, fonts, shellType as type, useColors } from '../theme';
 import { ActionButton, FeedbackLine, GameSymbol, InputField, TextAction } from '../ui';
 
 function Group({ header, footer, children }: { header?: string; footer?: string; children: ReactNode }) {
@@ -180,7 +180,7 @@ export function FriendsPanel() {
 
 const styles = StyleSheet.create({
   section: { gap: 8 },
-  header: { paddingHorizontal: 16, fontWeight: '600' },
+  header: { paddingHorizontal: 16, fontFamily: fonts.editorial, fontSize: 20, fontWeight: '600' },
   footer: { paddingHorizontal: 16 },
   group: { borderRadius: 16, borderCurve: 'continuous', overflow: 'hidden' },
   form: { padding: 16, gap: 12 },

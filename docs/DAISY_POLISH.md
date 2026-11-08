@@ -76,3 +76,21 @@ Wordle has taller key faces, adjoining touch targets without dead gaps, larger l
 Native iPhone Simulator checks confirmed an untouched archive Zip at `0:00`, the first-move start, and pause/resume across navigation. Wordle accepted rapid repeated letters (`COCOA`), showed the ready Enter state, and cleared the row with a held Delete. Captures are in ignored `build/daisy-review/word-keyboard-ready.png` and `zip-{before,after}-pause.png`. The pause captures are 16 seconds apart; the stopwatch advances six seconds including navigation and capture overhead. A subsequent native accessibility capture failure was worked around with simulator deep links and native screenshots.
 
 Validation: 27 gameplay tests, 7,637 puzzle parity checks, typecheck, lint and `git diff --check` pass. The seven added tests cover timer formatting, untouched grids, long pauses, checkpoint restoration, completion/hint penalties, reset/legacy behavior, and backwards system-clock adjustments/corrupt saves. This follow-up has not been published to Expo or checked on a physical phone.
+
+## Approved C typography
+
+The selected font study is implemented in the React Native app: soft Fraunces
+for the Daisy wordmark, home deck titles, collection headings and monthly pack
+names; DM Sans for shell copy, counts and shared controls. Each game's own
+lettering and puzzle glyphs are preserved. A separate shell type ramp keeps the
+new editorial face out of game questions and keyboards. The two bundled font
+files add 404,140 bytes and no dependencies, and include their licenses and
+reproduction notes in `mobile/assets/fonts/`.
+
+Native iPhone 17 Pro captures verified the home in light/dark appearance, the
+collection list and the home list at accessibility-medium text size. Deck names
+now receive the remaining header width and fit before truncating. The larger
+text home header grows with its tally/countdown, keeping them above the list.
+Captures live in ignored `build/daisy-fonts/`. Typecheck, lint, the typography
+detector, `git diff --check` and the production iOS export pass. This change has
+not been published to the Expo tester channel or checked on a physical phone.

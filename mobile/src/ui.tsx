@@ -5,7 +5,7 @@ import { useIsFocused } from '@react-navigation/native';
 import Animated, { FadeIn, FadeOut, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { GameKind, nextEditionAt } from './core/engine';
 import { store, useArcade } from './store';
-import { springs, type, useColors } from './theme';
+import { fonts, springs, shellType as type, useColors } from './theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   action: { alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, paddingVertical: 15, borderRadius: 14, borderCurve: 'continuous' },
   textAction: { minHeight: 44, justifyContent: 'center' },
   field: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, borderRadius: 14, borderCurve: 'continuous' },
-  input: { flex: 1, fontSize: 20, paddingVertical: 16 },
+  input: { flex: 1, fontFamily: fonts.sans, fontSize: 20, paddingVertical: 16 },
   dots: { flexDirection: 'row', gap: 9 },
   dot: { width: 9, height: 9, borderRadius: 4.5 },
   toast: { position: 'absolute', alignSelf: 'center', maxWidth: '94%', zIndex: 30, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 8 },
