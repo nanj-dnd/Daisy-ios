@@ -114,6 +114,7 @@ function GameSession({ kind, day }: { kind: GameKind; day: number }) {
         {height > 0 && (
           <ScrollView
             ref={scroller} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" automaticallyAdjustKeyboardInsets
+            automaticallyAdjustContentInsets={false} contentInsetAdjustmentBehavior="never"
             scrollEnabled={!pinned(kind) || showResult || height < 580 || window.fontScale > 1.3} alwaysBounceVertical={false} style={styles.scroller}
             onContentSizeChange={() => { if (showResult && finishedHere && kind !== 'estimation') scroller.current?.scrollToEnd({ animated: !reduced }); }}
             contentContainerStyle={[styles.content, { minHeight: height, width: width + padding[kind] * 2, paddingHorizontal: padding[kind], paddingBottom: insets.bottom + 8 }]}
@@ -130,9 +131,9 @@ function GameSession({ kind, day }: { kind: GameKind; day: number }) {
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   blocked: { padding: 24, justifyContent: 'center' },
-  body: { flex: 1 },
-  // Fermi's card casts a wide shadow that shouldn't stop at the scroll view's edge.
-  scroller: { overflow: 'visible' },
+  // The scroll viewport ends below GameBar; results and globe geometry must never paint over it.
+  body: { flex: 1, overflow: 'hidden' },
+  scroller: { flex: 1 },
   content: { alignSelf: 'center', paddingTop: 6, gap: 18 },
   panel: { padding: 20, gap: 13, borderRadius: 18, borderCurve: 'continuous' },
   verdict: { flexDirection: 'row', alignItems: 'center', gap: 8 },

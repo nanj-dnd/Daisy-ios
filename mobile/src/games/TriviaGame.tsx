@@ -13,6 +13,7 @@ import { advanceTrivia, beginTrivia, editionNumber, submitTrivia, triviaFor, tri
 import { useArcade } from '../store';
 import { fonts } from '../theme';
 import { InputRef, useGameActive } from '../ui';
+import { useGameBack } from '../useGameBack';
 import { Art, Sprite, boat, boatColors, cloud, cloudColors, creatures, fish, kelp, shrimp, shrimpColors } from './Sprites';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -196,7 +197,7 @@ function Scanlines() {
 }
 
 function Dial({ seconds, urgent }: { seconds: number; urgent: boolean }) {
-  const size = 58, radius = 25, around = 2 * Math.PI * radius;
+  const size = 50, radius = 21, around = 2 * Math.PI * radius;
   const color = urgent ? pink : cyan;
   return (
     <View style={styles.dial} accessible accessibilityLabel={`${seconds} seconds remaining`}>
@@ -208,7 +209,7 @@ function Dial({ seconds, urgent }: { seconds: number; urgent: boolean }) {
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
         />
       </Svg>
-      <Text style={[styles.dialValue, { color }]}>{seconds}</Text>
+      <Text maxFontSizeMultiplier={1.2} style={[styles.dialValue, { color }]}>{seconds}</Text>
     </View>
   );
 }
@@ -233,6 +234,8 @@ export function TriviaGame({ day, result }: { day: number; result: ReactNode }) 
   const prompts = triviaFor(day);
   const [now, setNow] = useState(() => Date.now());
   const [surfaced, setSurfaced] = useState(progress.completed);
+  const [keyboardShown, setKeyboardShown] = useState(() => Keyboard.isVisible());
+  const leave = useGameBack();
   const input = useRef<InputRef>(null);
   const answered = progress.triviaPoints.length;
   const awaiting = progress.started && !progress.completed && answered === progress.round;
@@ -243,6 +246,12 @@ export function TriviaGame({ day, result }: { day: number; result: ReactNode }) 
   const [restingAt, setRestingAt] = useState(metres);
   // Derived, so the result can't flash up in the frame before the dive starts.
   const diving = !reduced && restingAt !== metres;
+
+  useEffect(() => {
+    const show = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', () => setKeyboardShown(true));
+    const hide = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide', () => setKeyboardShown(false));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
 
   // The deadline is stored, so a timer that passes while the app is away still counts.
   useEffect(() => {
@@ -284,11 +293,6 @@ export function TriviaGame({ day, result }: { day: number; result: ReactNode }) 
 
   const camera = useAnimatedStyle(() => ({ transform: [{ translateY: anchor - depth.value * scale }] }));
   const submit = (answer: string) => arcade.update('trivia', day, (state) => { submitTrivia(state, prompts[state.round], answer); });
-  const leave = () => {
-    Keyboard.dismiss();
-    if (navigation.canGoBack()) navigation.goBack();
-    else navigation.navigate('Home');
-  };
   const stage = !progress.started ? 'intro' : progress.completed && surfaced ? 'summary' : awaiting ? 'prompt' : 'landed';
   const seconds = progress.roundDeadline === null ? 0 : Math.max(0, Math.ceil((progress.roundDeadline - now) / 1000));
   const urgent = seconds <= 5;
@@ -359,14 +363,16 @@ export function TriviaGame({ day, result }: { day: number; result: ReactNode }) 
       )}
 
       {stage === 'prompt' && (
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[styles.layer, { paddingBottom: insets.bottom + 26 }]} pointerEvents="box-none">
-          <ScrollView keyboardShouldPersistTaps="handled" style={styles.spacer} contentContainerStyle={{ paddingTop: insets.top + 110, paddingBottom: 12 }}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={StyleSheet.absoluteFill} pointerEvents="box-none">
+          <ScrollView keyboardShouldPersistTaps="handled" style={styles.spacer} contentContainerStyle={{ paddingTop: insets.top + 110, paddingHorizontal: 16, paddingBottom: 16 }}>
           <Animated.View key={progress.round} entering={reduced ? undefined : FadeIn.duration(260)} style={styles.card}>
             <Text style={styles.cardRound}>PROMPT {progress.round + 1} OF {triviaRounds}</Text>
             <Text style={styles.question}>{prompts[progress.round].question}</Text>
             <Text style={styles.cardHint}>▼ rarer answers sink deeper ▼</Text>
           </Animated.View>
           </ScrollView>
+          {/* KeyboardAvoidingView owns its paddingBottom. Safe-area clearance belongs on this child. */}
+          <View style={[styles.answerTray, { paddingBottom: keyboardShown ? 16 : insets.bottom + 40 }]}>
           <View style={styles.bar}>
             <Dial seconds={seconds} urgent={urgent} />
             <View style={[styles.field, { borderColor: urgent ? pink : cyan }]}>
@@ -378,10 +384,11 @@ export function TriviaGame({ day, result }: { day: number; result: ReactNode }) 
               />
             </View>
             <Pressable disabled={progress.pendingAnswer.trim() === ''} onPress={() => submit(progress.pendingAnswer)} accessibilityRole="button" accessibilityLabel="Dive" style={[styles.dive, { opacity: progress.pendingAnswer.trim() === '' ? 0.55 : 1 }]}>
-              <Text style={styles.diveText}>DIVE</Text>
+              <Text numberOfLines={1} adjustsFontSizeToFit maxFontSizeMultiplier={1.2} style={styles.diveText}>DIVE</Text>
             </Pressable>
           </View>
           <View style={styles.fuse}><View style={[styles.fuseFill, { width: `${(seconds / roundSeconds) * 100}%`, backgroundColor: urgent ? pink : cyan }]} /></View>
+          </View>
         </KeyboardAvoidingView>
       )}
 
@@ -464,13 +471,14 @@ const styles = StyleSheet.create({
   question: { ...pixel, fontSize: 30, lineHeight: 31, color: ice },
   cardHint: { ...pixel, fontSize: 15, letterSpacing: 1.5, color: slate },
   spacer: { flex: 1 },
+  answerTray: { paddingTop: 12, paddingHorizontal: 16, backgroundColor: '#071120', borderTopWidth: 1, borderTopColor: '#1F3350' },
   bar: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  dial: { width: 58, height: 58, alignItems: 'center', justifyContent: 'center' },
+  dial: { width: 50, height: 50, alignItems: 'center', justifyContent: 'center' },
   dialValue: { ...pixel, fontSize: 24 },
-  field: { flex: 1, height: 54, justifyContent: 'center', paddingHorizontal: 12, backgroundColor: '#0B1526F2', borderWidth: 2 },
-  input: { ...pixel, fontSize: 24, color: ice, padding: 0 },
-  dive: { height: 54, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E54B80', borderBottomWidth: 4, borderBottomColor: '#8E2C50' },
-  diveText: { ...pixel, fontSize: 24, letterSpacing: 3, color: abyss },
+  field: { flex: 1, minWidth: 0, height: 48, justifyContent: 'center', paddingHorizontal: 12, backgroundColor: '#0B1526F2', borderWidth: 2 },
+  input: { ...pixel, fontSize: 22, color: ice, padding: 0 },
+  dive: { height: 48, minWidth: 76, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E54B80', borderBottomWidth: 3, borderBottomColor: '#8E2C50' },
+  diveText: { ...pixel, fontSize: 22, letterSpacing: 1.5, color: abyss },
   fuse: { height: 3, marginTop: 6, backgroundColor: '#142238' },
   fuseFill: { height: 3 },
   landed: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 22, paddingTop: 110 },

@@ -7,6 +7,7 @@ import { GameKind, dateLabel, games } from '../core/engine';
 import { RootStack } from '../navigation';
 import { fonts, useGameLook } from '../theme';
 import { Icon, Press } from '../ui';
+import { useGameBack } from '../useGameBack';
 
 /** The strip above each board, drawn the way the original game draws its own. */
 export function GameBar({ kind, day, right }: { kind: GameKind; day: number; right?: ReactNode }) {
@@ -14,6 +15,7 @@ export function GameBar({ kind, day, right }: { kind: GameKind; day: number; rig
   const look = useGameLook(kind);
   const insets = useSafeAreaInsets();
   const title = games[kind].title;
+  const back = useGameBack();
   const help = () => navigation.navigate('Rules', { kind });
   const backLabel = { accessibilityRole: 'button', accessibilityLabel: 'Back' } as const;
   const helpLabel = { accessibilityRole: 'button', accessibilityLabel: `How to play ${title}` } as const;
@@ -21,7 +23,7 @@ export function GameBar({ kind, day, right }: { kind: GameKind; day: number; rig
   if (kind === 'estimation') {
     return (
       <View style={[styles.bar, styles.padded, { paddingTop: insets.top + 4 }]}>
-        <Press onPress={navigation.goBack} {...backLabel} style={[styles.round, { backgroundColor: '#FFFFFF' }]}><Icon name="chevron.left" size={18} color={look.ink} fallback="‹" /></Press>
+        <Press onPress={back} {...backLabel} style={[styles.round, { backgroundColor: '#FFFFFF' }]}><Icon name="chevron.left" size={18} color={look.ink} fallback="‹" /></Press>
         <Press onPress={help} {...helpLabel} style={[styles.round, { backgroundColor: look.action }]}><Icon name="questionmark" size={18} color="#FFFFFF" fallback="?" /></Press>
       </View>
     );
@@ -29,7 +31,7 @@ export function GameBar({ kind, day, right }: { kind: GameKind; day: number; rig
   if (kind === 'cryptic') {
     return (
       <View style={[styles.bar, styles.padded, { paddingTop: insets.top + 2 }]}>
-        <Press onPress={navigation.goBack} {...backLabel} style={styles.icon}><Icon name="arrow.left" size={24} color={look.ink} fallback="←" /></Press>
+        <Press onPress={back} {...backLabel} style={styles.icon}><Icon name="arrow.left" size={24} color={look.ink} fallback="←" /></Press>
         <View style={styles.dated}>
           <Text style={[styles.mulishBold, { color: look.ink }]}>{dateLabel(day)}</Text>
           <Text style={[styles.mulishSmall, { color: look.ink }]}>{title}</Text>
@@ -41,7 +43,7 @@ export function GameBar({ kind, day, right }: { kind: GameKind; day: number; rig
   if (kind === 'sudoku') {
     return (
       <View style={[styles.bar, styles.padded, { paddingTop: insets.top + 2, backgroundColor: look.panel }]}>
-        <Press onPress={navigation.goBack} {...backLabel} style={styles.icon}><Icon name="arrow.left" size={20} color={look.muted} fallback="←" weight="regular" /></Press>
+        <Press onPress={back} {...backLabel} style={styles.icon}><Icon name="arrow.left" size={20} color={look.muted} fallback="←" weight="regular" /></Press>
         <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={[styles.titleSmall, styles.grow, { color: look.ink }]}>{title}</Text>
         {right}
         <Press onPress={help} {...helpLabel} style={styles.icon}><Icon name="questionmark.circle" size={21} color={look.muted} fallback="?" weight="regular" /></Press>
@@ -51,7 +53,7 @@ export function GameBar({ kind, day, right }: { kind: GameKind; day: number; rig
   if (kind === 'globle') {
     return (
       <View style={[styles.bar, styles.padded, { paddingTop: insets.top + 2 }]}>
-        <Press onPress={navigation.goBack} {...backLabel} style={styles.icon}><Icon name="arrow.left" size={20} color={look.ink} fallback="←" weight="regular" /></Press>
+        <Press onPress={back} {...backLabel} style={styles.icon}><Icon name="arrow.left" size={20} color={look.ink} fallback="←" weight="regular" /></Press>
         <View style={[styles.centre, styles.ruled, { borderBottomColor: look.line }]}>
           <Text accessibilityRole="header" accessibilityLabel={title} style={[styles.wordmark, { color: look.ink }]}>{title.toUpperCase()}</Text>
         </View>
@@ -63,7 +65,7 @@ export function GameBar({ kind, day, right }: { kind: GameKind; day: number; rig
   const serif = kind !== 'zip';
   return (
     <View style={[styles.bar, styles.padded, { paddingTop: insets.top + 2 }, kind === 'word' && { borderBottomWidth: 1, borderBottomColor: look.line }]}>
-      <Press onPress={navigation.goBack} {...backLabel} style={styles.icon}><Icon name="arrow.left" size={20} color={look.ink} fallback="←" weight="regular" /></Press>
+      <Press onPress={back} {...backLabel} style={styles.icon}><Icon name="arrow.left" size={20} color={look.ink} fallback="←" weight="regular" /></Press>
       <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} accessibilityRole="header" style={[serif ? styles.serif : styles.titleSmall, styles.centre, { color: look.ink }]}>{title}</Text>
       <Press onPress={help} {...helpLabel} style={styles.icon}><Icon name="questionmark.circle" size={22} color={look.ink} fallback="?" weight="regular" /></Press>
     </View>
@@ -71,7 +73,7 @@ export function GameBar({ kind, day, right }: { kind: GameKind; day: number; rig
 }
 
 const styles = StyleSheet.create({
-  bar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 6 },
+  bar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 6, flexShrink: 0, zIndex: 20 },
   padded: { paddingHorizontal: 12 },
   round: {
     width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center',
