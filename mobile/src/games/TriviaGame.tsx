@@ -2,7 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { ReactNode, memo, useEffect, useMemo, useRef, useState } from 'react';
-import { AppState, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { AppState, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import Animated, {
   Easing, FadeIn, SharedValue, cancelAnimation, useAnimatedReaction, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withSequence, withTiming,
 } from 'react-native-reanimated';
@@ -227,6 +227,7 @@ export function TriviaGame({ day, result }: { day: number; result: ReactNode }) 
   const reduced = useReducedMotion();
   const active = useGameActive();
   const insets = useSafeAreaInsets();
+  const actionBottom = insets.bottom + 50;
   const window = useWindowDimensions();
   const progress = arcade.progress('trivia', day);
   const prompts = triviaFor(day);
@@ -283,6 +284,11 @@ export function TriviaGame({ day, result }: { day: number; result: ReactNode }) 
 
   const camera = useAnimatedStyle(() => ({ transform: [{ translateY: anchor - depth.value * scale }] }));
   const submit = (answer: string) => arcade.update('trivia', day, (state) => { submitTrivia(state, prompts[state.round], answer); });
+  const leave = () => {
+    Keyboard.dismiss();
+    if (navigation.canGoBack()) navigation.goBack();
+    else navigation.navigate('Home');
+  };
   const stage = !progress.started ? 'intro' : progress.completed && surfaced ? 'summary' : awaiting ? 'prompt' : 'landed';
   const seconds = progress.roundDeadline === null ? 0 : Math.max(0, Math.ceil((progress.roundDeadline - now) / 1000));
   const urgent = seconds <= 5;
@@ -295,7 +301,7 @@ export function TriviaGame({ day, result }: { day: number; result: ReactNode }) 
   return (
     <View style={styles.stage}>
       <StatusBar style={stage === 'intro' ? 'dark' : 'light'} />
-      <Animated.View style={[StyleSheet.absoluteFill, camera]}>
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, camera]}>
         <World width={window.width} still={reduced || !active} from={Math.min(restingAt, metres) - 160} to={Math.max(restingAt, metres) + window.height / scale} />
         <View style={styles.ruler}><Ruler from={metres - 500} to={Math.min(floor, metres + 1300)} at={metres} /></View>
         {stage === 'landed' && answered > 0 && <TierLines base={metres - points * 10} points={points} />}
@@ -323,7 +329,7 @@ export function TriviaGame({ day, result }: { day: number; result: ReactNode }) 
           </ScrollView>
         </View>
       )}
-      <View style={[styles.hud, { top: insets.top + 2 }]}>
+      <View pointerEvents="none" style={[styles.hud, { top: insets.top + 2 }]}>
         <PixelPanel width={86} height={50}>
           <View style={styles.pod}><Text maxFontSizeMultiplier={1.1} style={styles.podLabel}>DEPTH</Text><DepthCount depth={depth} /></View>
         </PixelPanel>
@@ -339,13 +345,8 @@ export function TriviaGame({ day, result }: { day: number; result: ReactNode }) 
           <View style={[styles.pod, styles.podRight]}><Text maxFontSizeMultiplier={1.1} style={styles.podLabel}>SCORE</Text><Text maxFontSizeMultiplier={1.15} style={styles.scoreValue}>{total}</Text></View>
         </PixelPanel>
       </View>
-      <View style={[styles.tools, { top: insets.top + 58 }]}>
-        <Pressable onPress={navigation.goBack} accessibilityRole="button" accessibilityLabel="Back" style={styles.tool}><Text style={styles.toolText}>‹</Text></Pressable>
-        <Pressable onPress={() => navigation.navigate('Rules', { kind: 'trivia' })} accessibilityRole="button" accessibilityLabel="How to play Krillion" style={styles.tool}><Text style={styles.toolText}>?</Text></Pressable>
-      </View>
-
       {stage === 'intro' && (
-        <View style={[styles.layer, { paddingBottom: insets.bottom + 18 }]}>
+        <View pointerEvents="box-none" style={[styles.layer, { paddingBottom: actionBottom }]}>
           <View style={[styles.title, { top: insets.top + 80 }]} pointerEvents="none">
             <Text accessibilityRole="header" numberOfLines={1} adjustsFontSizeToFit allowFontScaling={false} style={styles.titleText}>KRILLION</Text>
             <Text numberOfLines={1} adjustsFontSizeToFit allowFontScaling={false} style={styles.tagline}>THE DAILY DIVE</Text>
@@ -358,7 +359,7 @@ export function TriviaGame({ day, result }: { day: number; result: ReactNode }) 
       )}
 
       {stage === 'prompt' && (
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[styles.layer, { paddingBottom: insets.bottom + 10 }]} pointerEvents="box-none">
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[styles.layer, { paddingBottom: insets.bottom + 26 }]} pointerEvents="box-none">
           <ScrollView keyboardShouldPersistTaps="handled" style={styles.spacer} contentContainerStyle={{ paddingTop: insets.top + 110, paddingBottom: 12 }}>
           <Animated.View key={progress.round} entering={reduced ? undefined : FadeIn.duration(260)} style={styles.card}>
             <Text style={styles.cardRound}>PROMPT {progress.round + 1} OF {triviaRounds}</Text>
@@ -385,7 +386,7 @@ export function TriviaGame({ day, result }: { day: number; result: ReactNode }) 
       )}
 
       {stage === 'landed' && !diving && (
-        <View style={[styles.layer, { paddingBottom: insets.bottom + 18 }]}>
+        <View pointerEvents="box-none" style={[styles.layer, { paddingBottom: actionBottom }]}>
           <Animated.View entering={reduced ? undefined : FadeIn.duration(320)} style={styles.landed}>
             {points > 0 && <Sprite art={creatures[tiers.indexOf(tier)]} palette={{ d: tier.color, k: abyss }} pixel={5} />}
             <Text style={[styles.tierName, { color: points > 0 ? tier.color : '#B9CCE8', textShadowColor: points > 0 ? tier.color : 'transparent' }]}>{points > 0 ? tier.name : 'NOTHING LANDED'}</Text>
@@ -401,6 +402,11 @@ export function TriviaGame({ day, result }: { day: number; result: ReactNode }) 
         </View>
       )}
 
+      {/* Keep these last and above every full-screen stage, including the prompt's scroll view. */}
+      <View pointerEvents="box-none" style={[styles.tools, { top: insets.top + 58 }]}>
+        <Pressable onPress={leave} hitSlop={6} accessibilityRole="button" accessibilityLabel="Back" style={({ pressed }) => [styles.tool, { opacity: pressed ? 0.65 : 1 }]}><Text style={styles.toolText}>‹</Text></Pressable>
+        <Pressable onPress={() => navigation.navigate('Rules', { kind: 'trivia' })} hitSlop={6} accessibilityRole="button" accessibilityLabel="How to play Krillion" style={({ pressed }) => [styles.tool, { opacity: pressed ? 0.65 : 1 }]}><Text style={styles.toolText}>?</Text></Pressable>
+      </View>
     </View>
   );
 }
@@ -429,7 +435,7 @@ const styles = StyleSheet.create({
   youText: { ...pixel, fontSize: 14, color: pink },
   youLine: { width: 22, height: 2, backgroundColor: pink },
   youHead: { width: 0, height: 0, borderTopWidth: 6, borderBottomWidth: 6, borderRightWidth: 9, borderTopColor: 'transparent', borderBottomColor: 'transparent', borderRightColor: pink },
-  hud: { position: 'absolute', left: 8, right: 8, flexDirection: 'row', justifyContent: 'space-between' },
+  hud: { position: 'absolute', left: 8, right: 8, flexDirection: 'row', justifyContent: 'space-between', zIndex: 9 },
   pod: { flex: 1, paddingHorizontal: 12, paddingTop: 6 },
   podRight: { alignItems: 'flex-end' },
   podLabel: { ...pixel, fontSize: 12, letterSpacing: 2.4, color: slate },
@@ -442,7 +448,7 @@ const styles = StyleSheet.create({
   squareNow: { backgroundColor: pink, borderColor: '#FFFFFF' },
   squareOpen: { backgroundColor: '#142238', borderColor: '#050A14' },
   roundLabel: { ...pixel, fontSize: 12, letterSpacing: 2.4, color: slate },
-  tools: { position: 'absolute', left: 8, right: 10, flexDirection: 'row', justifyContent: 'space-between' },
+  tools: { position: 'absolute', left: 8, right: 10, flexDirection: 'row', justifyContent: 'space-between', zIndex: 10 },
   tool: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', backgroundColor: '#0B1526CC', borderWidth: 2, borderColor: '#1F3350' },
   toolText: { ...pixel, fontSize: 24, lineHeight: 26, color: slate },
   layer: { ...StyleSheet.absoluteFill, justifyContent: 'flex-end', paddingHorizontal: 10 },

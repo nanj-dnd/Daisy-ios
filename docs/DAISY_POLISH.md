@@ -58,3 +58,7 @@ The public pages at [Krillion](https://krillion.io/), [Fermi](https://fermi.gg/)
 All eight games were opened for the initial native visual review. After desktop window control became unavailable, final screen verification used simulator deep links and native captures. The regression suite is logic testing, not an automated end-to-end touch suite, and this report does not claim a new manual win in every game after the edits.
 
 A physical phone still needs a check of two-thumb typing, drawing/back-gesture interaction, globe pinch/drag, haptics, VoiceOver navigation and sustained frame pacing. Reduce Motion alternatives are implemented but were not manually exercised on hardware. Existing map/content decisions in `CONTENT.md` remain in place. This pass has not been published to Expo or pushed to GitHub; the tester channel remains on its previously published version.
+
+## Krillion control follow-up
+
+The full-screen stage wrappers could intercept Back and Help even though those controls were visible. The navigation row now renders last, above every stage, with touch-through space between its controls. Decorative world/HUD layers do not take touches. Back dismisses the keyboard and falls back to Home if there is no previous route. Intro/Descend/Surface actions were raised 32 points; the answer bar was raised 16 points. Back and Help were exercised successfully from the round-result screen in the iPhone Simulator; typecheck and lint pass.
