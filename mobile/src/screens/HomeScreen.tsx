@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,6 +15,13 @@ import { GameSymbol, Icon, Press, TextAction, useCountdown } from '../ui';
 const frontDrop = 9;
 const headerHeight = 88;
 
+/** The once-a-second clock must not re-render the deck in the middle of a throw. */
+function HomeCountdown() {
+  const countdown = useCountdown();
+  const colors = useColors();
+  return <Text style={[type.caption, styles.countdown, { color: colors.muted }]} accessibilityLabel={`New games in ${countdown}`}>New in {countdown}</Text>;
+}
+
 export function HomeScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStack>>();
   const arcade = useArcade();
@@ -25,8 +32,7 @@ export function HomeScreen() {
   const day = arcade.today;
   const usable = window.height - insets.top - insets.bottom;
   const listOnly = window.fontScale >= 1.35 || usable < 600;
-  const open = (kind: GameKind) => navigation.navigate('Game', { kind, day });
-  const countdown = useCountdown();
+  const open = useCallback((kind: GameKind) => navigation.navigate('Game', { kind, day }), [navigation, day]);
 
   const stackHeight = Math.max(300, usable - 206);
   const layout = useMemo<DeckLayout>(() => {
@@ -46,14 +52,14 @@ export function HomeScreen() {
           <Text style={[styles.mark, { color: colors.ink }]} accessibilityRole="header" allowFontScaling={false}>Daisy</Text>
           {window.fontScale < 1.35 && <Text style={[type.subheadline, styles.tagline, { color: colors.ink }]}>Your daily brain break.</Text>}
         </View>
-        <View style={styles.tally} accessible accessibilityLabel={`${arcade.completedCount(day)} of ${gameKinds.length} games completed today`}>
-          <View style={styles.tallyDots}>
+        <View style={styles.tally}>
+          <View style={styles.tallyDots} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
             {gameKinds.map((kind) => (
               <View key={kind} style={[styles.tallyDot, { backgroundColor: cardColor(kind), opacity: arcade.progress(kind, day).completed ? 1 : 0.3 }]} />
             ))}
           </View>
-          <Text style={[type.subheadline, styles.count, { color: colors.ink }]}>{arcade.completedCount(day)} of {gameKinds.length}</Text>
-          <Text style={[type.caption, styles.countdown, { color: colors.muted }]} accessibilityLabel={`New games in ${countdown}`}>New in {countdown}</Text>
+          <Text accessibilityLabel={`${arcade.completedCount(day)} of ${gameKinds.length} games completed today`} style={[type.subheadline, styles.count, { color: colors.ink }]}>{arcade.completedCount(day)} of {gameKinds.length}</Text>
+          <HomeCountdown />
         </View>
       </View>
 

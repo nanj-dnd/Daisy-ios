@@ -40,7 +40,7 @@ export function useGameLook(kind: GameKind): GameLook {
   const dark = useColorScheme() === 'dark';
   switch (kind) {
     case 'trivia': return { page: '#050A14', ink: '#E8F1FF', muted: '#7D93B8', panel: '#101D33', action: '#4DE3FF', actionInk: '#050A14', line: '#1F3350', status: 'light' };
-    case 'estimation': return { page: '#E9E6DE', ink: '#1A1F2B', muted: '#5C5F66', panel: '#FFFFFF', action: '#FF5E3A', actionInk: '#FFFFFF', line: '#D5D1C7', status: 'dark' };
+    case 'estimation': return { page: '#E9E6DE', ink: '#1A1F2B', muted: '#5C5F66', panel: '#FFFFFF', action: '#C84328', actionInk: '#FFFFFF', line: '#D5D1C7', status: 'dark' };
     case 'cryptic': return { page: '#ADD3FF', ink: '#000000', muted: '#26384F', panel: '#FFFFFF', action: '#FFF2B1', actionInk: '#000000', line: '#000000', status: 'dark' };
     case 'word': case 'groups': return dark ? newsprintDark : newsprint;
     case 'sudoku': return dark ? professionalDark : professional;
@@ -67,3 +67,6 @@ export const springs = {
   press: { stiffness: 820, damping: 40, mass: 1 },
   step: { stiffness: 224, damping: 26, mass: 1 },
 };
+
+/** One clock for tile faces, keyboard feedback and the result that follows them. */
+export const wordMotion = { flip: 360, stagger: 120, reveal: 840, celebration: 620 };

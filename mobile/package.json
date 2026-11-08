@@ -56,7 +56,8 @@
     "share": "eas update --branch preview --environment preview",
     "typecheck": "tsc --noEmit",
     "lint": "expo lint",
-    "schema": "tsx scripts/schema-check.ts"
+    "schema": "tsx scripts/schema-check.ts",
+    "test": "tsx --test scripts/gameplay.test.ts"
   },
   "private": true
 }

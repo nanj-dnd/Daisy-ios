@@ -1,13 +1,14 @@
 import { geoInterpolate } from 'd3-geo';
 import * as Haptics from 'expo-haptics';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { GestureDetector, usePanGesture, usePinchGesture, useSimultaneousGestures } from 'react-native-gesture-handler';
 import { useReducedMotion } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { answerColor, borderDistance, centroidOf, countries, countryIndex, findCountry, globleAnswer, heatColor, suggestCountries } from '../core/globle';
 import { useArcade } from '../store';
 import { fonts, useGameLook } from '../theme';
+import { Icon, Press, useGameActive } from '../ui';
 import { Globe } from './Globe';
 
 const blue = '#2F4BE2';
@@ -17,6 +18,7 @@ export function GlobleGame({ day, availableWidth }: { day: number; availableWidt
   const arcade = useArcade();
   const look = useGameLook('globle');
   const reduced = useReducedMotion();
+  const active = useGameActive();
   const progress = arcade.progress('globle', day);
   const answer = globleAnswer(day);
   const [typed, setTyped] = useState('');
@@ -29,6 +31,7 @@ export function GlobleGame({ day, availableWidth }: { day: number; availableWidt
   const live = useRef({ centre, zoom });
   useLayoutEffect(() => { live.current = { centre, zoom }; });
   const grab = useRef({ centre, zoom });
+  const zoomStart = useRef(1);
   const flight = useRef<number | null>(null);
   const size = Math.min(availableWidth, 430);
 
@@ -44,32 +47,38 @@ export function GlobleGame({ day, availableWidth }: { day: number; availableWidt
     if (progress.completed) painted.set(answer, answerColor);
     return painted;
   }, [guesses, answer, progress.completed]);
-  const closest = guesses.filter((guess) => guess.index !== answer).reduce<number | null>((best, guess) => (best === null || guess.distance < best ? guess.distance : best), null);
+  const closest = guesses.reduce<number | null>((best, guess) => (best === null || guess.distance < best ? guess.distance : best), null);
 
   useEffect(() => () => { if (flight.current !== null) cancelAnimationFrame(flight.current); }, []);
+  useEffect(() => { if (!active && flight.current !== null) { cancelAnimationFrame(flight.current); flight.current = null; } }, [active]);
   /** Turns the globe to a country along the shortest way round. */
   const flyTo = (index: number) => {
     const target = centroidOf(index);
     if (flight.current !== null) cancelAnimationFrame(flight.current);
+    flight.current = null;
     if (reduced) { setCentre(target); return; }
     const path = geoInterpolate(live.current.centre, target);
     const started = Date.now();
+    let drawn = 0;
     const step = () => {
-      const t = Math.min(1, (Date.now() - started) / 850);
-      const eased = t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
-      setCentre(path(eased) as [number, number]);
+      const elapsed = Date.now() - started;
+      const t = Math.min(1, elapsed / 650);
+      // Projection is CPU work; bound flights to 30 frames/sec instead of competing with touch input.
+      if (elapsed - drawn >= 32 || t === 1) { setCentre(path(1 - (1 - t) ** 3) as [number, number]); drawn = elapsed; }
       flight.current = t < 1 ? requestAnimationFrame(step) : null;
     };
     flight.current = requestAnimationFrame(step);
   };
 
   const guess = (text: string) => {
-    if (progress.completed) return;
+    const current = arcade.progress('globle', day);
+    if (current.completed) return;
     const index = findCountry(text);
     if (index === null) { setMessage('Invalid country name'); void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error); return; }
     const name = countries[index].name;
     setTyped('');
-    if (progress.guesses.includes(name)) { setMessage(`Already guessed ${name}`); flyTo(index); return; }
+    Keyboard.dismiss();
+    if (current.guesses.includes(name)) { setMessage(`Already guessed ${name}`); flyTo(index); return; }
     const distance = borderDistance(index, answer);
     arcade.update('globle', day, (state) => {
       if (state.completed || state.guesses.includes(name)) return;
@@ -78,7 +87,7 @@ export function GlobleGame({ day, availableWidth }: { day: number; availableWidt
     });
     if (index === answer) setMessage(`The Mystery Country is ${name}!`);
     else if (closest === null) setMessage(distance === 0 ? `${name} shares a border with it!` : `${name} is ${kilometres(distance)} away`);
-    else setMessage(distance < closest ? `${name} is warmer!` : `${name} is cooler`);
+    else setMessage(distance === 0 ? `${name} shares a border with it!` : distance < closest ? `${name} is warmer!` : distance === closest ? `${name} is just as close` : `${name} is cooler`);
     void Haptics.impactAsync(index === answer ? Haptics.ImpactFeedbackStyle.Heavy : Haptics.ImpactFeedbackStyle.Light);
     flyTo(index);
   };
@@ -87,7 +96,7 @@ export function GlobleGame({ day, availableWidth }: { day: number; availableWidt
     {
       text: 'Reveal', style: 'destructive',
       onPress: () => {
-        arcade.update('globle', day, (state) => { state.revealed = true; arcade.finish(state, false); });
+        arcade.update('globle', day, (state) => { if (!state.completed) { state.revealed = true; arcade.finish(state, false); } });
         setMessage(`The Mystery Country was ${countries[answer].name}`);
         flyTo(answer);
       },
@@ -102,16 +111,26 @@ export function GlobleGame({ day, availableWidth }: { day: number; availableWidt
   const turn = (x: number, y: number) => {
     const perPoint = 180 / Math.PI / ((size / 2 - 10) * grab.current.zoom);
     const [lon, lat] = grab.current.centre;
-    setCentre([lon - x * perPoint, Math.max(-80, Math.min(80, lat + y * perPoint))]);
+    setCentre([((lon - x * perPoint + 540) % 360 + 360) % 360 - 180, Math.max(-80, Math.min(80, lat + y * perPoint))]);
   };
-  const scale = (factor: number) => setZoom(Math.max(1, Math.min(6, grab.current.zoom * factor)));
+  const scale = (factor: number) => setZoom(Math.max(1, Math.min(6, zoomStart.current * factor)));
+  const beginZoom = () => {
+    zoomStart.current = live.current.zoom;
+    if (flight.current !== null) { cancelAnimationFrame(flight.current); flight.current = null; }
+  };
+  const resetView = () => {
+    if (flight.current !== null) { cancelAnimationFrame(flight.current); flight.current = null; }
+    setZoom(1);
+    const target = progress.completed ? answer : last;
+    if (target !== null) flyTo(target); else setCentre([10, 20]);
+  };
   const pan = usePanGesture({
-    minDistance: 4,
+    minDistance: 4, maxPointers: 1,
     onBegin: () => { 'worklet'; scheduleOnRN(begin); },
     onUpdate: (event) => { 'worklet'; scheduleOnRN(turn, event.translationX, event.translationY); },
   });
   const pinch = usePinchGesture({
-    onBegin: () => { 'worklet'; scheduleOnRN(begin); },
+    onBegin: () => { 'worklet'; scheduleOnRN(beginZoom); },
     onUpdate: (event) => { 'worklet'; scheduleOnRN(scale, event.scale); },
   });
   const gesture = useSimultaneousGestures(pan, pinch);
@@ -123,13 +142,13 @@ export function GlobleGame({ day, availableWidth }: { day: number; availableWidt
       {!progress.completed && (
         <View style={styles.entry}>
           <TextInput
-            value={typed} onChangeText={(text) => { setTyped(text); setMessage(null); }} onSubmitEditing={(event) => guess(event.nativeEvent.text)}
-            placeholder="Enter country name here" placeholderTextColor="#8A929C" autoCorrect={false} autoCapitalize="words" returnKeyType="done"
+            value={typed} maxLength={80} onChangeText={(text) => { setTyped(text); setMessage(null); }} onSubmitEditing={(event) => guess(event.nativeEvent.text)}
+            placeholder="Enter country name" placeholderTextColor="#606B78" autoCorrect={false} autoCapitalize="words" returnKeyType="done"
             submitBehavior="submit" accessibilityLabel="Country name" style={styles.input}
           />
-          <Pressable onPress={() => guess(typed)} accessibilityRole="button" style={({ pressed }) => [styles.enter, pressed && { opacity: 0.8 }]}>
+          <Press onPress={() => guess(typed)} disabled={!typed.trim()} scale={0.98} accessibilityLabel="Guess country" accessibilityState={{ disabled: !typed.trim() }} style={[styles.enter, !typed.trim() && { opacity: 0.55 }]}>
             <Text style={styles.enterText}>Enter</Text>
-          </Pressable>
+          </Press>
         </View>
       )}
       {suggestions.length > 0 && (
@@ -147,15 +166,26 @@ export function GlobleGame({ day, availableWidth }: { day: number; availableWidt
           : guesses.length === 0 ? 'Enter the name of any country to make your first guess.' : `Closest border so far: ${kilometres(closest ?? 0)}`)}
       </Text>
       <GestureDetector gesture={gesture}>
-        <View style={[styles.globe, { width: size, height: size }]} accessible accessibilityLabel={`Globe showing ${guesses.length} guessed countries. Drag to spin, pinch to zoom.`}>
+        <View style={[styles.globe, { width: size, height: size }]} accessible accessibilityRole="adjustable" accessibilityLabel={`Globe showing ${guesses.length} guessed countries. Drag to spin, pinch to zoom.`} accessibilityValue={{ text: `${zoom.toFixed(1)} times zoom` }} accessibilityActions={[{ name: 'increment', label: 'Zoom in' }, { name: 'decrement', label: 'Zoom out' }, { name: 'east', label: 'Turn east' }, { name: 'west', label: 'Turn west' }]} onAccessibilityAction={({ nativeEvent }) => {
+          if (flight.current !== null) { cancelAnimationFrame(flight.current); flight.current = null; }
+          if (nativeEvent.actionName === 'increment') setZoom(value => Math.min(6, value + 0.5));
+          if (nativeEvent.actionName === 'decrement') setZoom(value => Math.max(1, value - 0.5));
+          if (nativeEvent.actionName === 'east' || nativeEvent.actionName === 'west') setCentre(([lon, lat]) => [lon + (nativeEvent.actionName === 'east' ? 30 : -30), lat]);
+        }}>
           <Globe size={size} centre={centre} zoom={zoom} fills={fills} />
         </View>
       </GestureDetector>
+      <View style={styles.globeTools}>
+        <Text style={[styles.gestureHint, { color: look.muted }]}>Drag to spin · Pinch to zoom</Text>
+        <Pressable accessibilityRole="button" accessibilityLabel="Reset globe view" onPress={resetView} style={styles.reset}>
+          <Icon name="arrow.counterclockwise" size={16} color={blue} fallback="↺" weight="medium" />
+        </Pressable>
+      </View>
       {guesses.length > 0 && (
         <View style={styles.list}>
           <View style={styles.listHead}>
             <Text style={[styles.listTitle, { color: look.ink }]}>{byOrder ? 'Guesses' : 'Closest'}</Text>
-            <Pressable onPress={() => setByOrder((value) => !value)} accessibilityRole="button" hitSlop={10}>
+            <Pressable onPress={() => setByOrder((value) => !value)} accessibilityRole="button" style={styles.sortButton}>
               <Text style={styles.sort}>{byOrder ? 'Sort by distance' : 'Sort by order of guesses'}</Text>
             </Pressable>
           </View>
@@ -185,15 +215,19 @@ const styles = StyleSheet.create({
   enter: { height: 44, paddingHorizontal: 18, borderRadius: 4, backgroundColor: blue, alignItems: 'center', justifyContent: 'center' },
   enterText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
   suggestions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignSelf: 'stretch' },
-  suggestion: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.85)' },
+  suggestion: { minHeight: 44, paddingHorizontal: 12, paddingVertical: 10, justifyContent: 'center', borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.85)' },
   suggestionText: { fontSize: 14, fontWeight: '600', color: '#111111' },
-  message: { fontSize: 16, fontWeight: '500', textAlign: 'center', minHeight: 22 },
+  message: { fontSize: 16, lineHeight: 23, fontWeight: '500', textAlign: 'center', minHeight: 46, paddingHorizontal: 6 },
   globe: { alignItems: 'center', justifyContent: 'center' },
   list: { alignSelf: 'stretch', gap: 2, paddingTop: 4 },
-  listHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 },
+  globeTools: { flexDirection: 'row', alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center', marginTop: -12, gap: 4 },
+  gestureHint: { fontSize: 13, flexShrink: 1 },
+  reset: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  listHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  sortButton: { minHeight: 44, justifyContent: 'center', flexShrink: 1 },
   listTitle: { fontFamily: fonts.montserrat, fontSize: 20 },
   sort: { fontSize: 13, fontWeight: '600', color: blue, textDecorationLine: 'underline' },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 36 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 48, paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#A6C7D3' },
   swatch: { width: 18, height: 18, borderRadius: 3, borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(0,0,0,0.35)' },
   country: { flex: 1, fontSize: 16 },
   distance: { fontSize: 14, fontVariant: ['tabular-nums'] },

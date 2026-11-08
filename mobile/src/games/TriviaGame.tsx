@@ -1,9 +1,10 @@
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
+import { StatusBar } from 'expo-status-bar';
 import { ReactNode, memo, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import Animated, {
-  Easing, FadeIn, SharedValue, useAnimatedReaction, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withSequence, withTiming,
+  Easing, FadeIn, SharedValue, cancelAnimation, useAnimatedReaction, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withSequence, withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
@@ -11,7 +12,7 @@ import Svg, { Circle, Defs, Pattern, Polygon, Rect } from 'react-native-svg';
 import { advanceTrivia, beginTrivia, editionNumber, submitTrivia, triviaFor, triviaRounds } from '../core/engine';
 import { useArcade } from '../store';
 import { fonts } from '../theme';
-import { InputRef } from '../ui';
+import { InputRef, useGameActive } from '../ui';
 import { Art, Sprite, boat, boatColors, cloud, cloudColors, creatures, fish, kelp, shrimp, shrimpColors } from './Sprites';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -67,6 +68,7 @@ function Swimmer({ depth, pixel, seconds, phase, rightward, width, still }: (typ
   useEffect(() => {
     if (still) return;
     position.set(withSequence(withTiming(to, { duration: seconds * 1000 * (1 - phase), easing: Easing.linear }), withTiming(from, { duration: 0 }), hop(from, to, seconds)));
+    return () => cancelAnimation(position);
   }, [from, to, seconds, phase, position, still]);
   const style = useAnimatedStyle(() => ({ transform: [{ translateX: position.value }] }));
   return (
@@ -77,7 +79,7 @@ function Swimmer({ depth, pixel, seconds, phase, rightward, width, still }: (typ
 }
 
 /** Everything fixed in the water. Memoized, because React must not touch it while the camera moves. */
-const World = memo(function World({ width, still }: { width: number; still: boolean }) {
+const World = memo(function World({ width, still, from, to }: { width: number; still: boolean; from: number; to: number }) {
   const columns = useMemo<Art[]>(() => [kelp(9), kelp(13), kelp(7), kelp(11)], []);
   return (
     <>
@@ -92,7 +94,7 @@ const World = memo(function World({ width, still }: { width: number; still: bool
       {columns.map((art, index) => (
         <Sprite key={index} art={art} palette={{ l: index % 2 === 0 ? '#0D2A47' : '#0A2038' }} pixel={3} flip={index % 2 === 1} style={[styles.spot, { left: index < 2 ? index * 30 - 14 : width - 60 - (index - 2) * 30, top: 1340 - art.length * 3 + (index % 2) * 90 }]} />
       ))}
-      {shoals.map((swimmer) => <Swimmer key={swimmer.depth} {...swimmer} width={width} still={still} />)}
+      {shoals.filter(swimmer => swimmer.depth >= from && swimmer.depth <= to).map((swimmer) => <Swimmer key={swimmer.depth} {...swimmer} width={width} still={still} />)}
       {markers.map((marker) => (
         <Text key={marker.depth} style={[styles.marker, marker.side === 'left' ? { left: 12 } : { right: 34 }, { top: marker.depth * scale }, marker.major && styles.markerMajor]}>
           {marker.side === 'left' ? `── ${marker.text}` : `${marker.text} ──`}
@@ -137,7 +139,10 @@ function TierLines({ base, points }: { base: number; points: number }) {
 
 function Bubble({ left, seconds, phase }: { left: number; seconds: number; phase: number }) {
   const rise = useSharedValue(phase);
-  useEffect(() => { rise.set(withSequence(withTiming(1, { duration: seconds * 1000 * (1 - phase), easing: Easing.linear }), withTiming(0, { duration: 0 }), hop(0, 1, seconds))); }, [rise, seconds, phase]);
+  useEffect(() => {
+    rise.set(withSequence(withTiming(1, { duration: seconds * 1000 * (1 - phase), easing: Easing.linear }), withTiming(0, { duration: 0 }), hop(0, 1, seconds)));
+    return () => cancelAnimation(rise);
+  }, [rise, seconds, phase]);
   const style = useAnimatedStyle(() => ({ opacity: 1 - rise.value, transform: [{ translateY: -110 * rise.value }, { translateX: 6 * Math.sin(rise.value * 9) }] }));
   return <Animated.View style={[styles.bubble, { left }, style]} />;
 }
@@ -147,6 +152,7 @@ function Shrimp({ top, diving, still }: { top: number; diving: boolean; still: b
   useEffect(() => {
     if (still) return;
     bob.set(withRepeat(withSequence(withTiming(1, { duration: 1100, easing: Easing.inOut(Easing.sin) }), withTiming(0, { duration: 1100, easing: Easing.inOut(Easing.sin) })), -1));
+    return () => cancelAnimation(bob);
   }, [bob, still]);
   const style = useAnimatedStyle(() => ({ transform: [{ translateY: bob.value * 7 }, { rotate: `${diving ? 24 : 0}deg` }] }));
   return (
@@ -177,7 +183,7 @@ function PixelPanel({ width, height, fill = '#0B1526E6', children, style }: { wi
 function DepthCount({ depth }: { depth: SharedValue<number> }) {
   const [shown, setShown] = useState(() => Math.round(depth.get()));
   useAnimatedReaction(() => Math.round(depth.value / 5) * 5, (value, previous) => { if (value !== previous) scheduleOnRN(setShown, value); });
-  return <Text style={styles.depthValue}>{shown.toLocaleString('en-US')}m</Text>;
+  return <Text numberOfLines={1} adjustsFontSizeToFit maxFontSizeMultiplier={1.15} style={styles.depthValue}>{shown.toLocaleString('en-US')}m</Text>;
 }
 
 function Scanlines() {
@@ -210,7 +216,7 @@ function Dial({ seconds, urgent }: { seconds: number; urgent: boolean }) {
 function FrameButton({ title, onPress, color }: { title: string; onPress: () => void; color: string }) {
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={title.replace(/[▼▲]/g, '').trim()} style={({ pressed }) => [styles.frame, { borderColor: color, shadowColor: color, opacity: pressed ? 0.75 : 1 }]}>
-      <Text style={styles.frameText}>{title}</Text>
+      <Text maxFontSizeMultiplier={1.2} numberOfLines={1} adjustsFontSizeToFit style={styles.frameText}>{title}</Text>
     </Pressable>
   );
 }
@@ -219,13 +225,14 @@ export function TriviaGame({ day, result }: { day: number; result: ReactNode }) 
   const navigation = useNavigation<NativeStackNavigationProp<RootStack>>();
   const arcade = useArcade();
   const reduced = useReducedMotion();
+  const active = useGameActive();
   const insets = useSafeAreaInsets();
   const window = useWindowDimensions();
   const progress = arcade.progress('trivia', day);
   const prompts = triviaFor(day);
   const [now, setNow] = useState(() => Date.now());
   const [surfaced, setSurfaced] = useState(progress.completed);
-    const input = useRef<InputRef>(null);
+  const input = useRef<InputRef>(null);
   const answered = progress.triviaPoints.length;
   const awaiting = progress.started && !progress.completed && answered === progress.round;
   const total = progress.triviaPoints.reduce((sum, points) => sum + points, 0);
@@ -238,10 +245,11 @@ export function TriviaGame({ day, result }: { day: number; result: ReactNode }) 
 
   // The deadline is stored, so a timer that passes while the app is away still counts.
   useEffect(() => {
+    if (!active || progress.completed) return;
     const tick = () => {
       const date = Date.now();
-      setNow(date);
       const state = arcade.progress('trivia', day);
+      setNow(previous => state.roundDeadline !== null && Math.ceil((state.roundDeadline - previous) / 1000) === Math.ceil((state.roundDeadline - date) / 1000) ? previous : date);
       if (state.roundDeadline !== null && date >= state.roundDeadline) {
         arcade.update('trivia', day, (draft) => { submitTrivia(draft, prompts[draft.round], '', date, true); });
       }
@@ -250,20 +258,24 @@ export function TriviaGame({ day, result }: { day: number; result: ReactNode }) 
     const clock = setInterval(tick, 250);
     const subscription = AppState.addEventListener('change', (next) => { if (next === 'active') tick(); });
     return () => { clearInterval(clock); subscription.remove(); };
-  }, [day]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [day, active, progress.completed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (!awaiting) return;
+    if (!awaiting || !active) return;
     const timer = setTimeout(() => input.current?.focus(), 450);
     return () => clearTimeout(timer);
-  }, [progress.round, awaiting]);
+  }, [progress.round, awaiting, active]);
 
   useEffect(() => {
+    if (reduced) {
+      settled.current = metres; depth.set(metres);
+      const frame = requestAnimationFrame(() => setRestingAt(metres));
+      return () => cancelAnimationFrame(frame);
+    }
     if (metres === settled.current) return;
     const distance = metres - settled.current;
     settled.current = metres;
-    if (reduced) { depth.set(metres); return; }
-    const duration = 1100 + distance;
+    const duration = Math.min(1500, 750 + distance * 0.6);
     depth.set(withTiming(metres, { duration, easing: Easing.bezier(0.3, 0, 0.2, 1) }));
     const timer = setTimeout(() => { setRestingAt(metres); void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); }, duration);
     return () => clearTimeout(timer);
@@ -282,12 +294,13 @@ export function TriviaGame({ day, result }: { day: number; result: ReactNode }) 
 
   return (
     <View style={styles.stage}>
+      <StatusBar style={stage === 'intro' ? 'dark' : 'light'} />
       <Animated.View style={[StyleSheet.absoluteFill, camera]}>
-        <World width={window.width} still={reduced} />
+        <World width={window.width} still={reduced || !active} from={Math.min(restingAt, metres) - 160} to={Math.max(restingAt, metres) + window.height / scale} />
         <View style={styles.ruler}><Ruler from={metres - 500} to={Math.min(floor, metres + 1300)} at={metres} /></View>
         {stage === 'landed' && answered > 0 && <TierLines base={metres - points * 10} points={points} />}
       </Animated.View>
-      <Shrimp top={stage === 'landed' || stage === 'summary' ? anchor - 40 : anchor + 180} diving={diving} still={reduced} />
+      <Shrimp top={stage === 'landed' || stage === 'summary' ? anchor - 40 : anchor + 180} diving={diving} still={reduced || !active} />
       <View pointerEvents="none" style={[styles.you, { top: anchor }]}><Text style={styles.youText}>YOU</Text><View style={styles.youLine} /><View style={styles.youHead} /></View>
       <Scanlines />
 
@@ -312,7 +325,7 @@ export function TriviaGame({ day, result }: { day: number; result: ReactNode }) 
       )}
       <View style={[styles.hud, { top: insets.top + 2 }]}>
         <PixelPanel width={86} height={50}>
-          <View style={styles.pod}><Text style={styles.podLabel}>DEPTH</Text><DepthCount depth={depth} /></View>
+          <View style={styles.pod}><Text maxFontSizeMultiplier={1.1} style={styles.podLabel}>DEPTH</Text><DepthCount depth={depth} /></View>
         </PixelPanel>
         <View style={styles.rounds}>
           <View style={styles.squares} accessible accessibilityLabel={`${answered} of ${triviaRounds} prompts answered`}>
@@ -320,10 +333,10 @@ export function TriviaGame({ day, result }: { day: number; result: ReactNode }) 
               <View key={index} style={[styles.square, index < answered ? styles.squareDone : index === progress.round && awaiting ? styles.squareNow : styles.squareOpen]} />
             ))}
           </View>
-          <Text style={styles.roundLabel}>{progress.completed ? 'DIVE COMPLETE' : progress.started ? `PROMPT ${progress.round + 1} OF ${triviaRounds}` : `DIVE #${editionNumber(day)}`}</Text>
+          <Text maxFontSizeMultiplier={1.1} style={styles.roundLabel}>{progress.completed ? 'DIVE COMPLETE' : progress.started ? `PROMPT ${progress.round + 1} OF ${triviaRounds}` : `DIVE #${editionNumber(day)}`}</Text>
         </View>
         <PixelPanel width={86} height={50}>
-          <View style={[styles.pod, styles.podRight]}><Text style={styles.podLabel}>SCORE</Text><Text style={styles.scoreValue}>{total}</Text></View>
+          <View style={[styles.pod, styles.podRight]}><Text maxFontSizeMultiplier={1.1} style={styles.podLabel}>SCORE</Text><Text maxFontSizeMultiplier={1.15} style={styles.scoreValue}>{total}</Text></View>
         </PixelPanel>
       </View>
       <View style={[styles.tools, { top: insets.top + 58 }]}>
@@ -333,30 +346,33 @@ export function TriviaGame({ day, result }: { day: number; result: ReactNode }) 
 
       {stage === 'intro' && (
         <View style={[styles.layer, { paddingBottom: insets.bottom + 18 }]}>
-          <View style={[styles.title, { top: insets.top + 96 }]} pointerEvents="none">
-            <Text accessibilityRole="header" style={styles.titleText}>KRILLION</Text>
-            <Text style={styles.tagline}>THE DAILY DIVE</Text>
+          <View style={[styles.title, { top: insets.top + 80 }]} pointerEvents="none">
+            <Text accessibilityRole="header" numberOfLines={1} adjustsFontSizeToFit allowFontScaling={false} style={styles.titleText}>KRILLION</Text>
+            <Text numberOfLines={1} adjustsFontSizeToFit allowFontScaling={false} style={styles.tagline}>THE DAILY DIVE</Text>
           </View>
-          <Text style={styles.subline}>7 prompts · 25 seconds each · rarer answers sink deeper. Ratings are curated, not live player data.</Text>
-          <FrameButton title="▼  BEGIN DESCENT  ▼" color={cyan} onPress={() => arcade.update('trivia', day, (state) => beginTrivia(state))} />
+          <View style={styles.introFooter}>
+            <Text style={styles.subline}>7 prompts · 25 seconds each · rarer answers sink deeper. Ratings are curated, not live player data.</Text>
+            <FrameButton title="▼  BEGIN DESCENT  ▼" color={cyan} onPress={() => arcade.update('trivia', day, (state) => beginTrivia(state))} />
+          </View>
         </View>
       )}
 
       {stage === 'prompt' && (
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[styles.layer, { paddingBottom: insets.bottom + 10 }]} pointerEvents="box-none">
-          <Animated.View key={progress.round} entering={reduced ? undefined : FadeIn.duration(260)} style={[styles.card, { marginTop: insets.top + 110 }]}>
+          <ScrollView keyboardShouldPersistTaps="handled" style={styles.spacer} contentContainerStyle={{ paddingTop: insets.top + 110, paddingBottom: 12 }}>
+          <Animated.View key={progress.round} entering={reduced ? undefined : FadeIn.duration(260)} style={styles.card}>
             <Text style={styles.cardRound}>PROMPT {progress.round + 1} OF {triviaRounds}</Text>
             <Text style={styles.question}>{prompts[progress.round].question}</Text>
             <Text style={styles.cardHint}>▼ rarer answers sink deeper ▼</Text>
           </Animated.View>
-          <View style={styles.spacer} pointerEvents="none" />
+          </ScrollView>
           <View style={styles.bar}>
             <Dial seconds={seconds} urgent={urgent} />
             <View style={[styles.field, { borderColor: urgent ? pink : cyan }]}>
               <TextInput
                 ref={input} value={progress.pendingAnswer} placeholder="type one answer…" placeholderTextColor={slate} accessibilityLabel="Your answer"
                 autoCorrect={false} autoCapitalize="words" returnKeyType="go" selectionColor={cyan} style={styles.input}
-                onChangeText={(value) => arcade.update('trivia', day, (state) => { state.pendingAnswer = value.slice(0, 80); })}
+                onChangeText={(value) => arcade.update('trivia', day, (state) => { if (state.roundDeadline !== null && !state.completed) state.pendingAnswer = value.slice(0, 80); })}
                 onSubmitEditing={() => { if (progress.pendingAnswer.trim() !== '') submit(progress.pendingAnswer); }}
               />
             </View>
@@ -427,13 +443,14 @@ const styles = StyleSheet.create({
   squareOpen: { backgroundColor: '#142238', borderColor: '#050A14' },
   roundLabel: { ...pixel, fontSize: 12, letterSpacing: 2.4, color: slate },
   tools: { position: 'absolute', left: 8, right: 10, flexDirection: 'row', justifyContent: 'space-between' },
-  tool: { width: 40, height: 34, alignItems: 'center', justifyContent: 'center', backgroundColor: '#0B1526CC', borderWidth: 2, borderColor: '#1F3350' },
+  tool: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', backgroundColor: '#0B1526CC', borderWidth: 2, borderColor: '#1F3350' },
   toolText: { ...pixel, fontSize: 24, lineHeight: 26, color: slate },
   layer: { ...StyleSheet.absoluteFill, justifyContent: 'flex-end', paddingHorizontal: 10 },
   title: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
-  titleText: { ...pixel, fontSize: 68, lineHeight: 70, letterSpacing: 5, color: '#0B1C36' },
-  tagline: { ...pixel, fontSize: 22, letterSpacing: 6, color: '#0B4F73' },
-  subline: { ...pixel, fontSize: 18, lineHeight: 21, letterSpacing: 1, color: '#B9CCE8', textAlign: 'center', paddingHorizontal: 14, marginBottom: 16 },
+  titleText: { ...pixel, fontSize: 68, lineHeight: 74, letterSpacing: 4, color: '#0B1C36', maxWidth: '94%' },
+  tagline: { ...pixel, fontSize: 22, letterSpacing: 5, color: '#0B4F73', maxWidth: '94%' },
+  introFooter: { padding: 12, gap: 16, backgroundColor: '#050A14D9' },
+  subline: { ...pixel, fontSize: 18, lineHeight: 23, letterSpacing: 0.6, color: '#B9CCE8', textAlign: 'center', paddingHorizontal: 4 },
   frame: { alignSelf: 'center', minWidth: 230, paddingHorizontal: 26, height: 66, alignItems: 'center', justifyContent: 'center', backgroundColor: hull, borderWidth: 3, shadowOpacity: 0.7, shadowRadius: 12, shadowOffset: { width: 0, height: 0 } },
   frameText: { ...pixel, fontSize: 25, letterSpacing: 4.5, color: ice },
   card: { paddingHorizontal: 18, paddingVertical: 16, gap: 10, backgroundColor: '#0B1526D9', borderWidth: 2, borderColor: '#1A2C46' },

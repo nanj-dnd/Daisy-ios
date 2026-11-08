@@ -30,7 +30,7 @@ export const games: Record<GameKind, GameMeta> = {
   },
   sudoku: {
     title: 'Mini Sudoku', subtitle: 'A small grid. A fresh start.', duration: '4 min', invitation: 'Small grid. Big satisfaction.', footnote: '6 × 6 · One unique solution',
-    rules: 'Fill this 6 × 6 grid with 1 through 6. Each row, column, and outlined 2 × 3 box must contain every digit exactly once. Original clues are locked. Turn on notes for pencil marks. Digits that clash turn red. Hint places one correct digit.',
+    rules: 'Fill this 6 × 6 grid with 1 through 6. Each row, column, and outlined 2 × 3 box must contain every digit exactly once. Original clues are locked. Turn on notes for pencil marks. Digits that clash turn red. Hint places one correct digit and adds 30 seconds to your scored time.',
   },
   zip: {
     title: 'Zip', subtitle: 'One line. Every cell.', duration: '2 min', invitation: 'Complete the path.', footnote: '6 × 6 · One unbroken line',
@@ -237,16 +237,19 @@ export function makeZip(day: number, size = 6): ZipPuzzle {
 }
 /** Whether the line may step onto this cell: next to its head, unused, and not skipping a number. */
 export function zipCanStep(puzzle: ZipPuzzle, path: number[], cell: number) {
+  if (!Number.isInteger(cell) || cell < 0 || cell >= puzzle.size ** 2) return false;
   const head = path[path.length - 1];
   if (head === undefined) return puzzle.marks[cell] === 1;
   if (path.includes(cell) || !zipAdjacent(head, cell, puzzle.size)) return false;
   const passed = path.filter((entry) => puzzle.marks[entry] !== undefined).length;
   const mark = puzzle.marks[cell];
+  if (mark === Object.keys(puzzle.marks).length && path.length !== puzzle.size ** 2 - 1) return false;
   return mark === undefined || mark === passed + 1;
 }
 export const zipComplete = (puzzle: ZipPuzzle, path: number[]) => {
   const marks = Object.keys(puzzle.marks).length;
-  return path.length === puzzle.size * puzzle.size && puzzle.marks[path[path.length - 1]] === marks;
+  return path.length === puzzle.size * puzzle.size && puzzle.marks[path[path.length - 1]] === marks
+    && path.every((cell, index) => zipCanStep(puzzle, path.slice(0, index), cell));
 };
 
 export type CrypticClue = { clue: string; answer: string; hint: string; explanation: string };
@@ -398,7 +401,11 @@ export function shareText(kind: GameKind, day: number, progress: GameProgress) {
       break;
     case 'groups': {
       const icons = ['🟨', '🟩', '🟦', '🟪'];
-      result = `${progress.solvedGroups.map((group) => icons[group % 4].repeat(4)).join('\n')}\n${progress.won ? 'Solved' : 'Finished'} · ${progress.mistakes} mistake${progress.mistakes === 1 ? '' : 's'}`;
+      const groups = groupsFor(day);
+      const rows = progress.guesses.length > 0
+        ? progress.guesses.map(guess => guess.split('|').map(word => icons[groups.findIndex(group => group.words.includes(word))] ?? '⬜').join(''))
+        : progress.solvedGroups.map(group => icons[group % 4].repeat(4));
+      result = `${rows.join('\n')}\n${progress.won ? 'Solved' : 'Finished'} · ${progress.mistakes} mistake${progress.mistakes === 1 ? '' : 's'}`;
       break;
     }
     case 'sudoku':

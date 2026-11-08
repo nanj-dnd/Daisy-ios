@@ -1,8 +1,9 @@
-import { Caveat_700Bold } from '@expo-google-fonts/caveat';
-import { Montserrat_300Light } from '@expo-google-fonts/montserrat';
-import { Mulish_400Regular, Mulish_700Bold } from '@expo-google-fonts/mulish';
-import { Sansita_800ExtraBold_Italic } from '@expo-google-fonts/sansita';
-import { VT323_400Regular } from '@expo-google-fonts/vt323';
+import { Caveat_700Bold } from '@expo-google-fonts/caveat/700Bold';
+import { Montserrat_300Light } from '@expo-google-fonts/montserrat/300Light';
+import { Mulish_400Regular } from '@expo-google-fonts/mulish/400Regular';
+import { Mulish_700Bold } from '@expo-google-fonts/mulish/700Bold';
+import { Sansita_800ExtraBold_Italic } from '@expo-google-fonts/sansita/800ExtraBold_Italic';
+import { VT323_400Regular } from '@expo-google-fonts/vt323/400Regular';
 import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useFonts } from 'expo-font';
@@ -12,6 +13,7 @@ import { AppState, Pressable, StyleSheet, Text, useColorScheme } from 'react-nat
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { RootStack } from './src/navigation';
+import { reviewLinks } from './src/reviewLinks';
 import { CollectionScreen } from './src/screens/CollectionScreen';
 import { GameScreen } from './src/screens/GameScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
@@ -52,10 +54,10 @@ export default function App() {
       <SafeAreaProvider>
         <StatusBar style="auto" />
         {ready && (fontsLoaded || fontError) && (
-          <NavigationContainer theme={theme}>
+          <NavigationContainer theme={theme} linking={reviewLinks}>
             <Stack.Navigator screenOptions={{ headerShadowVisible: false, headerBackButtonDisplayMode: 'minimal', headerTintColor: colors.ink }}>
               <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
-              <Stack.Screen name="Game" component={GameScreen} options={({ route }) => ({ headerShown: false, gestureEnabled: route.params.kind !== 'zip' && route.params.kind !== 'globle' })} />
+              <Stack.Screen name="Game" component={GameScreen} options={{ headerShown: false, gestureEnabled: true }} />
               <Stack.Screen name="Rules" component={RulesScreen} options={({ navigation }) => ({ presentation: 'modal', title: 'How to play', headerRight: done(navigation) })} />
               <Stack.Screen name="Collection" component={CollectionScreen} options={({ navigation }) => ({ presentation: 'modal', title: 'Your collection', headerRight: done(navigation) })} />
             </Stack.Navigator>

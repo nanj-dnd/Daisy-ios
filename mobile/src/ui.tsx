@@ -1,6 +1,7 @@
 import { SymbolView, SymbolViewProps } from 'expo-symbols';
 import { ComponentRef, ReactNode, Ref, useEffect, useRef, useState } from 'react';
-import { Pressable, PressableProps, StyleProp, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle } from 'react-native';
+import { AppState, Pressable, PressableProps, StyleProp, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
 import Animated, { FadeIn, FadeOut, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { GameKind, nextEditionAt } from './core/engine';
 import { store, useArcade } from './store';
@@ -104,11 +105,13 @@ export function Icon({ name, size, color, fallback, weight = 'bold' }: { name: S
 /** Time left until every game refreshes at midnight UTC, as h:mm:ss, ticking each second. Rolls the app over to the new day when it reaches zero. */
 export function useCountdown() {
   const arcade = useArcade();
+  const active = useGameActive();
   const [now, setNow] = useState(Date.now);
   useEffect(() => {
+    if (!active) return;
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [active]);
   const left = Math.max(0, Math.ceil((nextEditionAt(arcade.today) - now) / 1000));
   useEffect(() => { if (left === 0) store.refreshDay(); }, [left]);
   const pad = (value: number) => String(value).padStart(2, '0');
@@ -127,12 +130,24 @@ export function useToast(duration = 1600) {
   return { text, show };
 }
 export function Toast({ text, fill, ink, top }: { text: string; fill: string; ink: string; top: number }) {
+  const reduced = useReducedMotion();
   if (!text) return null;
   return (
-    <Animated.View entering={FadeIn.duration(120)} exiting={FadeOut.duration(220)} pointerEvents="none" style={[styles.toast, { top, backgroundColor: fill }]}>
+    <Animated.View entering={reduced ? undefined : FadeIn.duration(120)} exiting={reduced ? undefined : FadeOut.duration(180)} pointerEvents="none" style={[styles.toast, { top, backgroundColor: fill }]}>
       <Text accessibilityLiveRegion="polite" style={[styles.toastText, { color: ink }]}>{text}</Text>
     </Animated.View>
   );
+}
+
+/** Clocks and ambient animation stop behind another screen or while the app is backgrounded. */
+export function useGameActive() {
+  const focused = useIsFocused();
+  const [foreground, setForeground] = useState(AppState.currentState === 'active');
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', state => setForeground(state === 'active'));
+    return () => subscription.remove();
+  }, []);
+  return focused && foreground;
 }
 
 /** Plays a short horizontal shake; call the returned function to fire it. */
@@ -155,6 +170,6 @@ const styles = StyleSheet.create({
   input: { flex: 1, fontSize: 20, paddingVertical: 16 },
   dots: { flexDirection: 'row', gap: 9 },
   dot: { width: 9, height: 9, borderRadius: 4.5 },
-  toast: { position: 'absolute', alignSelf: 'center', zIndex: 30, paddingHorizontal: 14, paddingVertical: 11, borderRadius: 6 },
-  toastText: { fontSize: 14, fontWeight: '700' },
+  toast: { position: 'absolute', alignSelf: 'center', maxWidth: '94%', zIndex: 30, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 8 },
+  toastText: { fontSize: 14, lineHeight: 20, fontWeight: '700', textAlign: 'center' },
 });

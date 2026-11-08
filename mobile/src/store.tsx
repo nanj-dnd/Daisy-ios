@@ -84,6 +84,8 @@ class ArcadeStore {
     const before = this.progress(kind, day);
     const next: GameProgress = JSON.parse(JSON.stringify(before));
     change(next);
+    // Rejected board gestures and duplicate taps should not redraw every screen or write a save.
+    if (JSON.stringify(before) === JSON.stringify(next)) return;
     this.save = { ...this.save, games: { ...this.save.games, [saveKey(kind, day)]: next } };
     this.changed();
     void this.persist();

@@ -1,12 +1,12 @@
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GameKind, dateLabel, games } from '../core/engine';
 import { RootStack } from '../navigation';
 import { fonts, useGameLook } from '../theme';
-import { Icon } from '../ui';
+import { Icon, Press } from '../ui';
 
 /** The strip above each board, drawn the way the original game draws its own. */
 export function GameBar({ kind, day, right }: { kind: GameKind; day: number; right?: ReactNode }) {
@@ -21,41 +21,41 @@ export function GameBar({ kind, day, right }: { kind: GameKind; day: number; rig
   if (kind === 'estimation') {
     return (
       <View style={[styles.bar, styles.padded, { paddingTop: insets.top + 4 }]}>
-        <Pressable onPress={navigation.goBack} {...backLabel} style={[styles.round, { backgroundColor: '#FFFFFF' }]}><Icon name="chevron.left" size={18} color={look.ink} fallback="‹" /></Pressable>
-        <Pressable onPress={help} {...helpLabel} style={[styles.round, { backgroundColor: look.action }]}><Icon name="questionmark" size={18} color="#FFFFFF" fallback="?" /></Pressable>
+        <Press onPress={navigation.goBack} {...backLabel} style={[styles.round, { backgroundColor: '#FFFFFF' }]}><Icon name="chevron.left" size={18} color={look.ink} fallback="‹" /></Press>
+        <Press onPress={help} {...helpLabel} style={[styles.round, { backgroundColor: look.action }]}><Icon name="questionmark" size={18} color="#FFFFFF" fallback="?" /></Press>
       </View>
     );
   }
   if (kind === 'cryptic') {
     return (
       <View style={[styles.bar, styles.padded, { paddingTop: insets.top + 2 }]}>
-        <Pressable onPress={navigation.goBack} {...backLabel} style={styles.icon}><Icon name="arrow.left" size={24} color={look.ink} fallback="←" /></Pressable>
+        <Press onPress={navigation.goBack} {...backLabel} style={styles.icon}><Icon name="arrow.left" size={24} color={look.ink} fallback="←" /></Press>
         <View style={styles.dated}>
           <Text style={[styles.mulishBold, { color: look.ink }]}>{dateLabel(day)}</Text>
           <Text style={[styles.mulishSmall, { color: look.ink }]}>{title}</Text>
         </View>
-        <Pressable onPress={help} {...helpLabel} style={styles.icon}><Icon name="info.circle" size={25} color={look.ink} fallback="i" weight="medium" /></Pressable>
+        <Press onPress={help} {...helpLabel} style={styles.icon}><Icon name="info.circle" size={25} color={look.ink} fallback="i" weight="medium" /></Press>
       </View>
     );
   }
   if (kind === 'sudoku') {
     return (
       <View style={[styles.bar, styles.padded, { paddingTop: insets.top + 2, backgroundColor: look.panel }]}>
-        <Pressable onPress={navigation.goBack} {...backLabel} style={styles.icon}><Icon name="arrow.left" size={20} color={look.muted} fallback="←" weight="regular" /></Pressable>
-        <Text style={[styles.titleSmall, styles.grow, { color: look.ink }]}>{title}</Text>
+        <Press onPress={navigation.goBack} {...backLabel} style={styles.icon}><Icon name="arrow.left" size={20} color={look.muted} fallback="←" weight="regular" /></Press>
+        <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={[styles.titleSmall, styles.grow, { color: look.ink }]}>{title}</Text>
         {right}
-        <Pressable onPress={help} {...helpLabel} style={styles.icon}><Icon name="questionmark.circle" size={21} color={look.muted} fallback="?" weight="regular" /></Pressable>
+        <Press onPress={help} {...helpLabel} style={styles.icon}><Icon name="questionmark.circle" size={21} color={look.muted} fallback="?" weight="regular" /></Press>
       </View>
     );
   }
   if (kind === 'globle') {
     return (
       <View style={[styles.bar, styles.padded, { paddingTop: insets.top + 2 }]}>
-        <Pressable onPress={navigation.goBack} {...backLabel} style={styles.icon}><Icon name="arrow.left" size={20} color={look.ink} fallback="←" weight="regular" /></Pressable>
+        <Press onPress={navigation.goBack} {...backLabel} style={styles.icon}><Icon name="arrow.left" size={20} color={look.ink} fallback="←" weight="regular" /></Press>
         <View style={[styles.centre, styles.ruled, { borderBottomColor: look.line }]}>
           <Text accessibilityRole="header" accessibilityLabel={title} style={[styles.wordmark, { color: look.ink }]}>{title.toUpperCase()}</Text>
         </View>
-        <Pressable onPress={help} {...helpLabel} style={styles.icon}><Icon name="questionmark.circle" size={22} color={look.ink} fallback="?" weight="regular" /></Pressable>
+        <Press onPress={help} {...helpLabel} style={styles.icon}><Icon name="questionmark.circle" size={22} color={look.ink} fallback="?" weight="regular" /></Press>
       </View>
     );
   }
@@ -63,9 +63,9 @@ export function GameBar({ kind, day, right }: { kind: GameKind; day: number; rig
   const serif = kind !== 'zip';
   return (
     <View style={[styles.bar, styles.padded, { paddingTop: insets.top + 2 }, kind === 'word' && { borderBottomWidth: 1, borderBottomColor: look.line }]}>
-      <Pressable onPress={navigation.goBack} {...backLabel} style={styles.icon}><Icon name="arrow.left" size={20} color={look.ink} fallback="←" weight="regular" /></Pressable>
-      <Text numberOfLines={1} accessibilityRole="header" style={[serif ? styles.serif : styles.titleSmall, styles.centre, { color: look.ink }]}>{title}</Text>
-      <Pressable onPress={help} {...helpLabel} style={styles.icon}><Icon name="questionmark.circle" size={22} color={look.ink} fallback="?" weight="regular" /></Pressable>
+      <Press onPress={navigation.goBack} {...backLabel} style={styles.icon}><Icon name="arrow.left" size={20} color={look.ink} fallback="←" weight="regular" /></Press>
+      <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} accessibilityRole="header" style={[serif ? styles.serif : styles.titleSmall, styles.centre, { color: look.ink }]}>{title}</Text>
+      <Press onPress={help} {...helpLabel} style={styles.icon}><Icon name="questionmark.circle" size={22} color={look.ink} fallback="?" weight="regular" /></Press>
     </View>
   );
 }
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   },
   icon: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   dated: { flex: 1, marginLeft: 6 },
-  grow: { flex: 1 },
+  grow: { flex: 1, minWidth: 0, flexShrink: 1, marginRight: 8 },
   centre: { flex: 1, textAlign: 'center' },
   mulishBold: { fontFamily: fonts.mulishBold, fontSize: 16 },
   mulishSmall: { fontFamily: fonts.mulish, fontSize: 12 },

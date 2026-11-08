@@ -1,13 +1,14 @@
 import * as Haptics from 'expo-haptics';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import { scheduleOnRN } from 'react-native-worklets';
 import Svg, { Circle, Polyline } from 'react-native-svg';
-import { clockLabel, makeZip, zipCanStep, zipComplete } from '../core/engine';
+import { clockLabel, makeZip, zipComplete } from '../core/engine';
+import { moveZip } from '../core/play';
 import { useArcade } from '../store';
 import { useGameLook } from '../theme';
-import { Icon } from '../ui';
+import { Icon, Press, Toast, useGameActive, useToast } from '../ui';
 
 const lineColor = '#EE7A32';
 const ringColor = '#E06A26';
@@ -20,49 +21,38 @@ export function ZipGame({ day, availableWidth }: { day: number; availableWidth: 
   const [now, setNow] = useState(() => Date.now());
   const [howTo, setHowTo] = useState(true);
   const path = progress.path ?? [];
+  const active = useGameActive();
+  const toast = useToast();
   const size = puzzle.size;
-  const cell = availableWidth / size;
-  const seconds = ((progress.completedAt ?? now) - (progress.startedAt ?? now)) / 1000;
+  const inner = availableWidth - 4;
+  const cell = inner / size;
+  const seconds = Math.max(0, ((progress.completedAt ?? now) - (progress.startedAt ?? now)) / 1000) + progress.hints * 15;
   const lastCell = useRef(-1);
 
   useEffect(() => {
-    if (progress.completed) return;
-    const clock = setInterval(() => setNow(Date.now()), 500);
+    if (progress.completed || !active) return;
+    const clock = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(clock);
-  }, [progress.completed]);
+  }, [progress.completed, active]);
 
   const finishIfDone = (state: typeof progress) => {
     if (!zipComplete(puzzle, state.path ?? [])) return;
     arcade.finish(state, true);
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
   /** Touching the line rewinds to that point; touching a neighbour extends it. Fast drags can skip cells, so it walks the gap. */
   const visit = (target: number) => {
     arcade.update('zip', day, (state) => {
       if (state.completed) return;
-      const line = [...(state.path ?? [])];
-      const existing = line.indexOf(target);
-      if (existing >= 0) { line.length = existing + 1; state.path = line; return; }
-      let head = line[line.length - 1];
-      if (head === undefined) { if (zipCanStep(puzzle, line, target)) line.push(target); state.path = line; return; }
-      const targetRow = Math.floor(target / size), targetColumn = target % size;
-      while (head !== target) {
-        const row = Math.floor(head / size), column = head % size;
-        const across = targetColumn === column ? 0 : Math.sign(targetColumn - column);
-        const down = targetRow === row ? 0 : Math.sign(targetRow - row);
-        const options = [across !== 0 ? head + across : -1, down !== 0 ? head + down * size : -1].filter((option) => option >= 0 && zipCanStep(puzzle, line, option));
-        if (options.length === 0) break;
-        head = options[0];
-        line.push(head);
-      }
-      state.path = line;
+      const previous = state.path ?? [];
+      state.path = moveZip(puzzle, previous, target);
+      if (state.path.length > previous.length && puzzle.marks[target]) void Haptics.selectionAsync();
       finishIfDone(state);
     });
   };
   const latest = useRef(visit);
   useLayoutEffect(() => { latest.current = visit; });
   const touch = useCallback((x: number, y: number) => {
-    const column = Math.floor(x / cell), row = Math.floor(y / cell);
+    const column = Math.floor((x - 2) / cell), row = Math.floor((y - 2) / cell);
     if (column < 0 || row < 0 || column >= size || row >= size) return;
     const target = row * size + column;
     if (target === lastCell.current) return;
@@ -77,8 +67,11 @@ export function ZipGame({ day, availableWidth }: { day: number; availableWidth: 
     onFinalize: () => { 'worklet'; scheduleOnRN(lift); },
   });
 
-  const undo = () => arcade.update('zip', day, (state) => { state.path = (state.path ?? []).slice(0, Math.max(1, (state.path ?? []).length - 1)); });
-  const reset = () => arcade.update('zip', day, (state) => { state.path = []; });
+  const undo = () => arcade.update('zip', day, (state) => { if (!state.completed) state.path = (state.path ?? []).slice(0, -1); });
+  const reset = () => Alert.alert('Reset this path?', 'Your time and hint count will keep running.', [
+    { text: 'Keep playing', style: 'cancel' },
+    { text: 'Reset path', style: 'destructive', onPress: () => arcade.update('zip', day, state => { if (!state.completed) state.path = []; }) },
+  ]);
   const hint = () => arcade.update('zip', day, (state) => {
     if (state.completed) return;
     const line = state.path ?? [];
@@ -86,6 +79,7 @@ export function ZipGame({ day, availableWidth }: { day: number; availableWidth: 
     while (shared < line.length && line[shared] === puzzle.solution[shared]) shared += 1;
     state.path = puzzle.solution.slice(0, shared + 1);
     state.hints = Math.min(36, state.hints + 1);
+    toast.show(`Next step shown · +15 seconds`);
     finishIfDone(state);
   });
   const centre = (index: number) => ({ x: (index % size) * cell + cell / 2, y: Math.floor(index / size) * cell + cell / 2 });
@@ -95,11 +89,13 @@ export function ZipGame({ day, availableWidth }: { day: number; availableWidth: 
 
   return (
     <View style={styles.game}>
+      <Toast text={toast.text} fill={look.ink} ink={look.page} top={54} />
       <View style={styles.status}>
         <View style={styles.clock} accessible accessibilityLabel={`Time ${clockLabel(seconds)}`}>
           <Icon name="clock" size={15} color={look.ink} fallback="◷" />
           <Text style={[styles.clockText, { color: look.ink }]}>{clockLabel(seconds)}</Text>
         </View>
+        <Text style={[styles.progress, { color: look.muted }]} accessibilityLiveRegion="polite">{path.length} / {size * size} cells</Text>
         {!progress.completed && (
           <Pressable onPress={reset} disabled={path.length === 0} accessibilityRole="button" style={({ pressed }) => [styles.reset, { borderColor: look.ink, opacity: path.length === 0 ? 0.4 : pressed ? 0.6 : 1 }]}>
             <Text style={[styles.resetText, { color: look.ink }]}>Reset</Text>
@@ -107,14 +103,15 @@ export function ZipGame({ day, availableWidth }: { day: number; availableWidth: 
         )}
       </View>
       <GestureDetector gesture={pan}>
-        <View style={[styles.board, { width: availableWidth, height: availableWidth, backgroundColor: look.panel, borderColor: look.muted }]} accessible accessibilityLabel={`Zip grid, ${path.length} of ${size * size} cells filled`}>
+        <View style={[styles.board, { width: availableWidth, height: availableWidth, backgroundColor: look.panel, borderColor: look.muted }]}>
+          <View style={{ width: inner, height: inner }}>
           {Array.from({ length: size - 1 }, (_, line) => (
             <View key={`v${line}`}>
-              <View style={[styles.gridline, { left: (line + 1) * cell, top: 0, bottom: 0, width: 2, height: availableWidth, backgroundColor: `${look.muted}66` }]} />
-              <View style={[styles.gridline, { top: (line + 1) * cell, left: 0, right: 0, height: 2, width: availableWidth, backgroundColor: `${look.muted}66` }]} />
+              <View style={[styles.gridline, { left: (line + 1) * cell, top: 0, width: 1, height: inner, backgroundColor: `${look.muted}66` }]} />
+              <View style={[styles.gridline, { top: (line + 1) * cell, left: 0, height: 1, width: inner, backgroundColor: `${look.muted}66` }]} />
             </View>
           ))}
-          <Svg width={availableWidth} height={availableWidth} style={StyleSheet.absoluteFill}>
+          <Svg width={inner} height={inner} style={StyleSheet.absoluteFill}>
             {path.length > 1 && <Polyline points={points} fill="none" stroke={lineColor} strokeWidth={cell * 0.72} strokeLinecap="round" strokeLinejoin="round" />}
             {head && <Circle cx={head.x} cy={head.y} r={cell * 0.36} fill={lineColor} />}
           </Svg>
@@ -126,17 +123,21 @@ export function ZipGame({ day, availableWidth }: { day: number; availableWidth: 
               </View>
             );
           })}
+          {Array.from({ length: size * size }, (_, index) => (
+            <View key={`access-${index}`} accessible accessibilityRole="button" accessibilityLabel={`Row ${Math.floor(index / size) + 1}, column ${index % size + 1}${puzzle.marks[index] ? `, number ${puzzle.marks[index]}` : ''}, ${path.includes(index) ? 'on the path' : 'empty'}`} accessibilityState={{ disabled: progress.completed }} onAccessibilityTap={() => visit(index)} style={{ position: 'absolute', left: index % size * cell, top: Math.floor(index / size) * cell, width: cell, height: cell }} />
+          ))}
+          </View>
         </View>
       </GestureDetector>
       {!progress.completed && (
         <>
           <View style={styles.actions}>
-            <Pressable onPress={undo} disabled={path.length < 2} accessibilityRole="button" style={[styles.action, { backgroundColor: path.length < 2 ? `${look.muted}26` : look.ink }]}>
-              <Text style={[styles.actionText, { color: path.length < 2 ? `${look.muted}AA` : look.page }]}>Undo</Text>
-            </Pressable>
-            <Pressable onPress={hint} accessibilityRole="button" style={[styles.action, styles.outline, { borderColor: look.ink }]}>
-              <Text style={[styles.actionText, { color: look.ink }]}>Hint</Text>
-            </Pressable>
+            <Press onPress={undo} disabled={path.length === 0} scale={0.98} accessibilityState={{ disabled: path.length === 0 }} style={[styles.action, { backgroundColor: path.length === 0 ? `${look.muted}26` : look.ink }]}>
+              <Text style={[styles.actionText, { color: path.length === 0 ? look.muted : look.page }]}>Undo</Text>
+            </Press>
+            <Press onPress={hint} scale={0.98} accessibilityLabel="Hint, adds 15 seconds" style={[styles.action, styles.outline, { borderColor: look.ink }]}>
+              <Text style={[styles.actionText, { color: look.ink }]}>Hint · +15s</Text>
+            </Press>
           </View>
           <View style={[styles.howTo, { borderColor: `${look.muted}44`, backgroundColor: look.panel }]}>
             <Pressable onPress={() => setHowTo((value) => !value)} accessibilityRole="button" accessibilityState={{ expanded: howTo }} style={styles.howToHead}>
@@ -172,15 +173,16 @@ const styles = StyleSheet.create({
   status: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 36 },
   clock: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   clockText: { fontSize: 18, fontWeight: '700', fontVariant: ['tabular-nums'] },
-  reset: { minHeight: 34, paddingHorizontal: 16, justifyContent: 'center', borderRadius: 17, borderWidth: 1 },
+  progress: { fontSize: 13, fontVariant: ['tabular-nums'] },
+  reset: { minHeight: 44, paddingHorizontal: 16, justifyContent: 'center', borderRadius: 22, borderWidth: 1 },
   resetText: { fontSize: 15, fontWeight: '600' },
-  board: { borderRadius: 26, borderWidth: 2, overflow: 'hidden' },
+  board: { borderRadius: 22, borderWidth: 2, overflow: 'hidden' },
   gridline: { position: 'absolute' },
   mark: { position: 'absolute', alignItems: 'center', justifyContent: 'center', backgroundColor: '#000000' },
   markStart: { borderWidth: 3, borderColor: ringColor },
   markText: { color: '#FFFFFF', fontWeight: '700' },
   actions: { flexDirection: 'row', gap: 8 },
-  action: { flex: 1, height: 38, alignItems: 'center', justifyContent: 'center', borderRadius: 19 },
+  action: { flex: 1, minHeight: 46, alignItems: 'center', justifyContent: 'center', borderRadius: 23 },
   outline: { borderWidth: 1 },
   actionText: { fontSize: 15, fontWeight: '600' },
   howTo: { borderWidth: 1, borderRadius: 6, paddingHorizontal: 16 },

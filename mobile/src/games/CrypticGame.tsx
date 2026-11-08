@@ -1,8 +1,10 @@
 import * as Haptics from 'expo-haptics';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Modal, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, SlideInDown, SlideOutDown, useReducedMotion } from 'react-native-reanimated';
 import { useState } from 'react';
 import { crypticFor } from '../core/engine';
+import { checkCryptic, crypticHint } from '../core/play';
 import { useArcade } from '../store';
 import { fonts } from '../theme';
 import { Icon, Toast, useShake, useToast } from '../ui';
@@ -28,9 +30,12 @@ function Marked({ title, tint, onPress, disabled }: { title: string; tint: strin
   );
 }
 
-export function CrypticGame({ day, availableWidth }: { day: number; availableWidth: number }) {
+export function CrypticGame({ day, availableWidth, availableHeight }: { day: number; availableWidth: number; availableHeight: number }) {
   const arcade = useArcade();
   const reduced = useReducedMotion();
+  const insets = useSafeAreaInsets();
+  const { fontScale } = useWindowDimensions();
+  const compact = availableHeight < 620 || fontScale > 1.3;
   const progress = arcade.progress('cryptic', day);
   const clue = crypticFor(day);
   const [hintsOpen, setHintsOpen] = useState(false);
@@ -42,11 +47,11 @@ export function CrypticGame({ day, availableWidth }: { day: number; availableWid
   const keyWidth = (availableWidth - keyGap * 9) / 10;
 
   const typeLetter = (letter: string) => arcade.update('cryptic', day, (state) => { if (!state.completed && state.pendingAnswer.length < length) state.pendingAnswer += letter; });
-  const remove = () => arcade.update('cryptic', day, (state) => { state.pendingAnswer = state.pendingAnswer.slice(0, -1); });
+  const remove = () => arcade.update('cryptic', day, (state) => { if (!state.completed) state.pendingAnswer = state.pendingAnswer.slice(0, Math.max(state.hints >= 2 ? 1 : 0, state.pendingAnswer.length - 1)); });
   const submit = () => {
-    const guess = arcade.progress('cryptic', day).pendingAnswer;
-    if (progress.completed || guess.length !== length) return;
-    if (guess === clue.answer) { arcade.update('cryptic', day, (state) => arcade.finish(state, true)); return; }
+    let verdict: ReturnType<typeof checkCryptic> = 'finished';
+    arcade.update('cryptic', day, state => { verdict = checkCryptic(state, clue.answer); });
+    if ((verdict as ReturnType<typeof checkCryptic>) !== 'incorrect') return;
     toast.show('not quite');
     shake();
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -58,8 +63,9 @@ export function CrypticGame({ day, availableWidth }: { day: number; availableWid
       { text: 'Reveal answer', style: 'destructive', onPress: () => arcade.update('cryptic', day, (state) => { state.revealed = true; arcade.finish(state, false); }) },
     ]);
   };
-  const takeHint = (level: number) => {
-    arcade.update('cryptic', day, (state) => { state.hints = Math.max(state.hints, level); });
+  const takeHint = (level: 1 | 2) => {
+    arcade.update('cryptic', day, state => crypticHint(state, clue.answer, level));
+    void Haptics.selectionAsync();
     setHintsOpen(false);
   };
   const letters = (row: string) => [...row].map((letter) => (
@@ -67,7 +73,7 @@ export function CrypticGame({ day, availableWidth }: { day: number; availableWid
   ));
 
   return (
-    <View style={[styles.game, !progress.completed && styles.fill]}>
+    <View style={[styles.game, compact && styles.compact, !progress.completed && styles.fill]}>
       {toast.text !== '' && <Toast text={toast.text} fill="#000000" ink="#FFFFFF" top={140} />}
       <View style={styles.clue}>{/* Keeps the letter count on the line with the clue's last word. */}
         <Text style={styles.clueText}>{clue.clue.replace(' (', '\u00A0(')}</Text></View>
@@ -77,7 +83,7 @@ export function CrypticGame({ day, availableWidth }: { day: number; availableWid
           const fill = progress.completed ? mint : !progress.completed && index === typed.length ? lilac : '#FFFFFF';
           return (
             <View key={index} style={[styles.box, { width: box, height: box, backgroundColor: fill }, index > 0 && styles.joined, index === 0 && styles.firstBox, index === length - 1 && styles.lastBox]}>
-              <Text style={[styles.boxLetter, { width: box, fontSize: box * 0.72, opacity: ghost ? 0.3 : 1 }]}>{typed[index] ?? ghost}</Text>
+              <Text maxFontSizeMultiplier={1.1} style={[styles.boxLetter, { width: box, fontSize: box * 0.72, opacity: ghost ? 0.55 : 1 }]}>{typed[index] ?? ghost}</Text>
             </View>
           );
         })}
@@ -87,13 +93,13 @@ export function CrypticGame({ day, availableWidth }: { day: number; availableWid
           {[1, 2, 3].map((dot) => (
             <View key={dot} style={styles.dotColumn}>
               <View style={[styles.dot, { backgroundColor: dot <= progress.hints ? '#000000' : sky }, dot === 2 && dot > progress.hints && styles.parDot]} />
-              {dot === 2 && <Text style={styles.par}>par</Text>}
+              {dot === 2 && <Text numberOfLines={1} maxFontSizeMultiplier={1.3} style={styles.par}>par</Text>}
             </View>
           ))}
         </View>
       )}
       {progress.hints >= 1 && !progress.completed && (
-        <Animated.View entering={FadeIn} style={styles.hint}>
+        <Animated.View entering={reduced ? undefined : FadeIn.duration(180)} style={styles.hint}>
           <Text style={styles.hintText}>{clue.hint}</Text>
         </Animated.View>
       )}
@@ -121,8 +127,10 @@ export function CrypticGame({ day, availableWidth }: { day: number; availableWid
           </View>
         </>
       )}
-      {hintsOpen && (
-        <Animated.View entering={reduced ? undefined : SlideInDown.springify().stiffness(240).damping(26)} exiting={reduced ? undefined : SlideOutDown.duration(180)} style={styles.sheet}>
+      <Modal visible={hintsOpen} transparent animationType="none" onRequestClose={() => setHintsOpen(false)}>
+        <View style={styles.modal}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Dismiss hints" onPress={() => setHintsOpen(false)} style={styles.scrim} />
+        <Animated.View accessibilityViewIsModal entering={reduced ? undefined : SlideInDown.duration(240)} exiting={reduced ? undefined : SlideOutDown.duration(180)} style={[styles.sheet, { paddingBottom: insets.bottom + 18 }]}>
           <View style={styles.sheetHead}>
             <Text style={styles.sheetTitle}>Select a hint</Text>
             <Pressable onPress={() => setHintsOpen(false)} accessibilityRole="button" accessibilityLabel="Close" style={styles.close}><Icon name="xmark" size={20} color="#000000" fallback="×" /></Pressable>
@@ -132,13 +140,15 @@ export function CrypticGame({ day, availableWidth }: { day: number; availableWid
           <View style={styles.rule} />
           <Marked title="reveal answer" tint={sky} onPress={reveal} />
         </Animated.View>
-      )}
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   game: { gap: 22 },
+  compact: { gap: 14 },
   fill: { flex: 1 },
   clue: { paddingHorizontal: 20, paddingVertical: 14, backgroundColor: '#FFFFFF', borderRadius: 8 },
   clueText: { fontFamily: fonts.mulish, fontSize: 24, lineHeight: 34, color: '#000000' },
@@ -152,7 +162,7 @@ const styles = StyleSheet.create({
   dotColumn: { alignItems: 'center', width: 22 },
   dot: { width: 20, height: 20, borderRadius: 10 },
   parDot: { borderWidth: 2, borderColor: '#000000', backgroundColor: 'transparent' },
-  par: { position: 'absolute', top: 22, width: 44, textAlign: 'center', fontFamily: fonts.chunky, fontSize: 18, color: '#000000' },
+  par: { position: 'absolute', top: 22, width: 64, textAlign: 'center', fontFamily: fonts.chunky, fontSize: 18, color: '#000000' },
   hint: { paddingHorizontal: 14, paddingVertical: 10, backgroundColor: butter, borderRadius: 8 },
   hintText: { fontFamily: fonts.mulish, fontSize: 16, lineHeight: 22, color: '#000000' },
   actions: { flexDirection: 'row', gap: 16, paddingHorizontal: 8 },
@@ -160,12 +170,14 @@ const styles = StyleSheet.create({
   chunkyText: { fontFamily: fonts.chunky, fontSize: 20 },
   keyboard: { gap: 9, marginHorizontal: -8 },
   keyRow: { flexDirection: 'row', justifyContent: 'center', gap: keyGap },
-  key: { height: 46, backgroundColor: '#FFFFFF', borderRadius: 5, boxShadow: '0 0 3px -1px rgba(0,0,0,0.3)' },
+  key: { height: 46, backgroundColor: '#FFFFFF', borderRadius: 5, boxShadow: '0 2px 2px rgba(0,0,0,0.12)' },
   keyText: { fontFamily: fonts.mulish, fontSize: 18, color: '#000000' },
   answerCard: { padding: 20, gap: 8, backgroundColor: '#FFFFFF', borderRadius: 8 },
   answerTitle: { fontFamily: fonts.chunky, fontSize: 24, color: '#000000' },
   explanation: { fontFamily: fonts.mulish, fontSize: 17, lineHeight: 25, color: '#000000' },
-  sheet: { position: 'absolute', left: -2, right: -2, bottom: 0, zIndex: 20, paddingHorizontal: 18, paddingTop: 14, paddingBottom: 18, gap: 8, backgroundColor: '#FFFFFF', borderWidth: 3, borderColor: '#000000', borderRadius: 18, boxShadow: '3px 3px 0 #000000' },
+  modal: { flex: 1, justifyContent: 'flex-end' },
+  scrim: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.28)' },
+  sheet: { marginHorizontal: 12, marginBottom: 8, paddingHorizontal: 20, paddingTop: 14, gap: 8, backgroundColor: '#FFFFFF', borderWidth: 3, borderColor: '#000000', borderRadius: 18 },
   sheetHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   sheetTitle: { fontFamily: fonts.mulish, fontSize: 16, color: '#000000' },
   close: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginRight: -10 },

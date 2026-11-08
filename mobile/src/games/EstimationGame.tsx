@@ -1,42 +1,32 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { Keyboard, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import Animated, { FadeIn, FadeInRight, FadeOutLeft, useReducedMotion } from 'react-native-reanimated';
-import { EstimateQuestion, displayNumber, editionNumber, estimateMultiple, estimatesFor, finishGame, parseEstimate } from '../core/engine';
+import { EstimateQuestion, displayNumber, editionNumber, estimateMultiple, estimatesFor, parseEstimate } from '../core/engine';
+import { evaluateCalculator, lockEstimate, nextEstimate } from '../core/play';
 import { useArcade } from '../store';
 import { fonts } from '../theme';
-import { Icon, InputRef } from '../ui';
+import { Icon, InputRef, Press, useGameActive } from '../ui';
 
-const coral = '#FF5E3A', deep = '#D94E2E', yellow = '#FFDE59', cream = '#FFF8EE', ink = '#1A1F2B';
-
-function evaluate(expression: string) {
-  const parts = expression.match(/(\d*\.?\d+|[+\-×÷])/g);
-  if (!parts) return null;
-  const terms: number[] = [Number(parts[0])], signs: string[] = [];
-  for (let index = 1; index + 1 < parts.length; index += 2) {
-    const operator = parts[index], value = Number(parts[index + 1]);
-    if (operator === '×') terms[terms.length - 1] *= value;
-    else if (operator === '÷') terms[terms.length - 1] /= value;
-    else { signs.push(operator); terms.push(value); }
-  }
-  const total = terms.slice(1).reduce((sum, value, index) => (signs[index] === '+' ? sum + value : sum - value), terms[0]);
-  return Number.isFinite(total) ? Number(total.toPrecision(10)) : null;
-}
+const coral = '#C84328', deep = '#A6311D', yellow = '#FFDE59', cream = '#FFF8EE', ink = '#1A1F2B';
 
 function Calculator({ onUse }: { onUse: (value: string) => void }) {
   const [expression, setExpression] = useState('');
-  const result = evaluate(expression);
+  const reduced = useReducedMotion();
+  const result = evaluateCalculator(expression);
+  const usable = result !== null && result > 0;
   const press = (key: string) => {
     if (key === 'C') setExpression('');
     else if (key === '⌫') setExpression((value) => value.slice(0, -1));
-    else setExpression((value) => value + key);
+    else setExpression((value) => (value + key).slice(0, 80));
   };
   return (
-    <Animated.View entering={FadeIn.duration(160)} style={styles.calculator}>
+    <Animated.View entering={reduced ? undefined : FadeIn.duration(160)} style={styles.calculator}>
       <Text numberOfLines={1} adjustsFontSizeToFit style={styles.calcScreen}>{expression || '0'}</Text>
       {['789÷', '456×', '123-', '.0⌫+'].map((row) => (
         <View key={row} style={styles.calcRow}>
           {[...row].map((key) => (
-            <Pressable key={key} onPress={() => press(key)} accessibilityRole="button" style={({ pressed }) => [styles.calcKey, { opacity: pressed ? 0.6 : 1 }]}>
+            <Pressable key={key} onPress={() => press(key)} accessibilityRole="button" accessibilityLabel={({ '⌫': 'Delete', '×': 'Multiply', '÷': 'Divide', '-': 'Subtract', '+': 'Add', '.': 'Decimal point' } as Record<string, string>)[key] ?? key} style={({ pressed }) => [styles.calcKey, { opacity: pressed ? 0.6 : 1 }]}>
               <Text style={styles.calcText}>{key}</Text>
             </Pressable>
           ))}
@@ -44,7 +34,7 @@ function Calculator({ onUse }: { onUse: (value: string) => void }) {
       ))}
       <View style={styles.calcRow}>
         <Pressable onPress={() => press('C')} accessibilityRole="button" style={styles.calcKey}><Text style={styles.calcText}>C</Text></Pressable>
-        <Pressable onPress={() => { if (result !== null) onUse(String(result)); }} disabled={result === null} accessibilityRole="button" style={[styles.calcUse, { opacity: result === null ? 0.5 : 1 }]}>
+        <Pressable onPress={() => { if (usable) onUse(String(result)); }} disabled={!usable} accessibilityRole="button" accessibilityState={{ disabled: !usable }} style={[styles.calcUse, { opacity: usable ? 1 : 0.5 }]}>
           <Text style={styles.calcUseText}>USE {result === null ? '' : displayNumber(result)}</Text>
         </Pressable>
       </View>
@@ -57,11 +47,11 @@ function Landing({ guess, answer }: { guess: number; answer: number }) {
   const place = Math.max(0, Math.min(1, (Math.log10(guess / answer) + 1) / 2));
   return (
     <View style={styles.landing} accessible accessibilityLabel={`Your guess compared with the answer on a scale from ${displayNumber(answer / 10)} to ${displayNumber(answer * 10)}`}>
-      <Text style={styles.kicker}>WHERE YOU LANDED</Text>
+      <Text style={styles.kicker}>YOUR GUESS ON THE SCALE</Text>
       <View style={styles.scale}>
-        {Array.from({ length: 21 }, (_, index) => <View key={index} style={[styles.bar, { height: 8 + (10 - Math.abs(index - 10)) * 3.6 }]} />)}
+        {Array.from({ length: 11 }, (_, index) => <View key={index} style={[styles.bar, { height: index === 5 ? 32 : index % 5 === 0 ? 22 : 12 }]} />)}
         <View style={styles.answerLine} />
-        <View style={[styles.youLine, { left: `${place * 100}%` }]}>
+        <View style={[styles.youLine, { left: `${Math.max(0.04, Math.min(0.96, place)) * 100}%` }]}>
           <View style={styles.youTag}><Text style={styles.youText}>You</Text></View>
         </View>
       </View>
@@ -77,7 +67,7 @@ function Landing({ guess, answer }: { guess: number; answer: number }) {
 function Verdict({ guess, answer }: { guess: number; answer: number }) {
   const multiple = estimateMultiple(guess, answer);
   const close = multiple < 1.05;
-  return <Text style={styles.verdict}>{close ? 'Spot on' : `${multiple.toFixed(2)}× ${guess > answer ? 'Too High' : 'Too Low'}`}</Text>;
+  return <Text numberOfLines={2} adjustsFontSizeToFit style={styles.verdict}>{close ? 'Spot on' : `${multiple.toFixed(2)}× ${guess > answer ? 'Too High' : 'Too Low'}`}</Text>;
 }
 
 function AnswerReview({ question, guess }: { question: EstimateQuestion; guess: number }) {
@@ -86,11 +76,11 @@ function AnswerReview({ question, guess }: { question: EstimateQuestion; guess: 
     <View style={styles.review}>
       <View style={styles.guessed}>
         <Text style={styles.kicker}>YOU GUESSED</Text>
-        <Text style={styles.guessValue}>{displayNumber(guess)}</Text>
+        <Text numberOfLines={1} adjustsFontSizeToFit style={styles.guessValue}>{displayNumber(guess)}</Text>
       </View>
       <View style={styles.answer}>
         <Text style={styles.answerKicker}>ANSWER</Text>
-        <Text style={styles.answerValue}>{displayNumber(question.answer)}</Text>
+        <Text numberOfLines={1} adjustsFontSizeToFit style={styles.answerValue}>{displayNumber(question.answer)}</Text>
         <Text style={styles.answerUnit}>{question.unit[0].toUpperCase() + question.unit.slice(1)}</Text>
       </View>
       <View>
@@ -123,6 +113,8 @@ export function EstimationGame({ day }: { day: number }) {
   const arcade = useArcade();
   const reduced = useReducedMotion();
   const progress = arcade.progress('estimation', day);
+  const active = useGameActive();
+  const { fontScale } = useWindowDimensions();
   const questions = estimatesFor(day);
   const [calculator, setCalculator] = useState(false);
   const [error, setError] = useState('');
@@ -131,19 +123,19 @@ export function EstimationGame({ day }: { day: number }) {
   const valid = parseEstimate(progress.pendingAnswer) !== null;
 
   useEffect(() => {
-    if (!awaiting) return;
+    if (!awaiting || !active || fontScale > 1.3) return;
     const timer = setTimeout(() => input.current?.focus(), 450);
     return () => clearTimeout(timer);
-  }, [progress.round, awaiting]);
+  }, [progress.round, awaiting, active, fontScale]);
 
   const submit = () => {
-    const value = parseEstimate(progress.pendingAnswer);
-    if (!awaiting || value === null) { setError('Enter a positive number, such as 1,250.'); return; }
+    const current = arcade.progress('estimation', day);
+    if (current.completed || current.values.length !== current.round) return;
+    if (parseEstimate(current.pendingAnswer) === null) { setError('Enter a positive number, such as 1,250.'); return; }
     setError(''); setCalculator(false);
-    arcade.update('estimation', day, (state) => {
-      state.values.push(value); state.pendingAnswer = '';
-      if (state.values.length === 3) finishGame(state, true);
-    });
+    input.current?.blur(); Keyboard.dismiss();
+    arcade.update('estimation', day, state => { lockEstimate(state); });
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
   if (progress.completed) {
@@ -154,7 +146,7 @@ export function EstimationGame({ day }: { day: number }) {
         <CardHead day={day} middle="RESULT" />
         <Text style={styles.finalHead}>Your{'\n'}<Text style={styles.finalHand}>educated</Text>{'\n'}guesses.</Text>
         <View style={styles.final}>
-          <Text style={styles.finalValue}>{average.toFixed(2)}×</Text>
+          <Text numberOfLines={1} adjustsFontSizeToFit style={styles.finalValue}>{average.toFixed(2)}×</Text>
           <Text style={styles.finalCaption}>Average error · Lower is better</Text>
         </View>
         {progress.values.map((guess, index) => (
@@ -176,29 +168,29 @@ export function EstimationGame({ day }: { day: number }) {
             <Text style={styles.question}>{question.question}</Text>
             <View style={styles.field}>
               <TextInput
-                ref={input} value={progress.pendingAnswer} placeholder="your guess" placeholderTextColor="#FFFFFFA6" keyboardType="decimal-pad" selectionColor="#FFFFFF"
+                ref={input} value={progress.pendingAnswer} placeholder="your guess" placeholderTextColor="#FFFFFFDC" keyboardType="decimal-pad" selectionColor="#FFFFFF"
                 accessibilityLabel="Your guess" style={styles.input}
-                onChangeText={(value) => arcade.update('estimation', day, (state) => { state.pendingAnswer = value.slice(0, 100); })}
+                onChangeText={(value) => { setError(''); arcade.update('estimation', day, (state) => { if (!state.completed && state.values.length === state.round) state.pendingAnswer = value.slice(0, 100); }); }}
               />
-              <Text style={styles.unit} numberOfLines={1}>{question.unit.toUpperCase()}</Text>
+              <Text maxFontSizeMultiplier={1.2} style={styles.unit} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{question.unit.toUpperCase()}</Text>
             </View>
-            {error !== '' && <Text style={styles.error}>{error}</Text>}
+            {error !== '' && <Text accessibilityLiveRegion="polite" style={styles.error}>{error}</Text>}
             <View style={styles.actions}>
-              <Pressable onPress={() => setCalculator((value) => !value)} accessibilityRole="button" accessibilityLabel="Calculator" accessibilityState={{ expanded: calculator }} style={styles.calcToggle}>
+              <Press onPress={() => { Keyboard.dismiss(); setCalculator(value => !value); }} accessibilityLabel="Calculator" accessibilityState={{ expanded: calculator }} style={styles.calcToggle}>
                 <Icon name="plus.forwardslash.minus" size={19} color="#FFFFFF" fallback="±" />
-              </Pressable>
-              <Pressable onPress={submit} disabled={!valid} accessibilityRole="button" accessibilityLabel="Lock it in" style={[styles.lock, valid && styles.lockReady]}>
+              </Press>
+              <Press onPress={submit} disabled={!valid} scale={0.98} accessibilityState={{ disabled: !valid }} accessibilityLabel="Lock it in" style={[styles.lock, valid && styles.lockReady]}>
                 <Text style={[styles.lockText, { color: valid ? coral : '#FFFFFFA6' }]}>LOCK IT IN ↵</Text>
-              </Pressable>
+              </Press>
             </View>
-            {calculator && <Calculator onUse={(value) => arcade.update('estimation', day, (state) => { state.pendingAnswer = value; })} />}
+            {calculator && <Calculator onUse={(value) => { arcade.update('estimation', day, state => { state.pendingAnswer = value; }); setCalculator(false); }} />}
           </>
         ) : (
           <>
-            <AnswerReview question={question} guess={progress.values[progress.round]} />
-            <Pressable onPress={() => arcade.update('estimation', day, (state) => { state.round += 1; state.pendingAnswer = ''; })} accessibilityRole="button" style={styles.next}>
+            <AnswerReview key={progress.round} question={question} guess={progress.values[progress.round]} />
+            <Press onPress={() => arcade.update('estimation', day, state => { nextEstimate(state); })} scale={0.98} style={styles.next}>
               <Text style={styles.nextText}>QUESTION {progress.round + 2} →</Text>
-            </Pressable>
+            </Press>
           </>
         )}
       </Animated.View>
@@ -208,13 +200,13 @@ export function EstimationGame({ day }: { day: number }) {
 
 const plain = { fontFamily: fonts.plain };
 const styles = StyleSheet.create({
-  card: { padding: 20, gap: 18, backgroundColor: coral, borderRadius: 28, borderCurve: 'continuous', shadowColor: '#000000', shadowOpacity: 0.3, shadowRadius: 26, shadowOffset: { width: 0, height: 16 } },
+  card: { padding: 20, gap: 20, backgroundColor: coral, borderRadius: 28, borderCurve: 'continuous', shadowColor: '#000000', shadowOpacity: 0.14, shadowRadius: 18, shadowOffset: { width: 0, height: 10 } },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   brand: { ...plain, fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
   round: { ...plain, fontSize: 12, fontWeight: '700', letterSpacing: 1, color: '#FFFFFF' },
   body: { gap: 18 },
-  question: { ...plain, fontSize: 27, lineHeight: 29, fontWeight: '700', letterSpacing: -0.4, color: '#FFFFFF' },
-  field: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 66, paddingHorizontal: 18, borderRadius: 16, backgroundColor: '#FFFFFF2E' },
+  question: { ...plain, fontSize: 27, lineHeight: 32, fontWeight: '700', letterSpacing: -0.4, color: '#FFFFFF' },
+  field: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 66, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 16, backgroundColor: '#00000024' },
   input: { ...plain, flex: 1, fontSize: 22, fontWeight: '700', color: '#FFFFFF', padding: 0 },
   unit: { ...plain, maxWidth: 120, fontSize: 13, fontWeight: '700', color: '#FFFFFFCC' },
   error: { ...plain, fontSize: 14, fontWeight: '600', color: yellow },
@@ -241,8 +233,8 @@ const styles = StyleSheet.create({
   answerUnit: { ...plain, fontSize: 14, fontWeight: '600', color: '#5C5F66' },
   verdict: { ...plain, fontSize: 31, fontWeight: '700', letterSpacing: -0.5, color: yellow, marginTop: 2 },
   landing: { gap: 6 },
-  scale: { height: 96, flexDirection: 'row', alignItems: 'flex-end', gap: 2 },
-  bar: { flex: 1, backgroundColor: '#FFFFFF4D', borderTopLeftRadius: 2, borderTopRightRadius: 2 },
+  scale: { height: 80, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', borderBottomWidth: 1, borderBottomColor: '#FFFFFF80' },
+  bar: { width: 1, backgroundColor: '#FFFFFF99' },
   answerLine: { position: 'absolute', left: '50%', top: 22, bottom: 0, width: 0, borderLeftWidth: 2, borderColor: '#FFFFFF', borderStyle: 'dashed' },
   youLine: { position: 'absolute', top: 22, bottom: 0, width: 2, backgroundColor: yellow },
   youTag: { position: 'absolute', top: -22, left: -17, width: 36, height: 20, alignItems: 'center', justifyContent: 'center', borderRadius: 5, backgroundColor: yellow },

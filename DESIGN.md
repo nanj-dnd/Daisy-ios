@@ -248,3 +248,5 @@ Wordle tiles are square and turn over left to right on a 0.12-second stagger, wi
 ## Game screens in the React Native app
 
 Since 2026-11-02 the deck and collection keep this document's identity, while each game screen in `mobile/` copies its original instead. Those screens follow `useGameLook` in `mobile/src/theme.ts`, not the tokens above. The SwiftUI game screens still follow this document.
+
+The 2026-11-08 refinement preserves those game worlds. Shared keyboard presses and feedback respect Reduce Motion. Wordle's reveal has one clock (120 ms stagger, 360 ms flip, 840 ms total reveal) followed by its victory feedback and result. Connections retains readable tile positions while solved rows fade in. Krillion reserves movement for the dive and stops ambient animation when hidden; Globle's country flight is interruptible. Geometry-bound puzzle glyphs and wordmarks use limited scaling, while long instructions scroll at larger text sizes. Fermi uses a deeper coral for readable labels. The complete mechanics and native visual review is in `docs/DAISY_POLISH.md`.

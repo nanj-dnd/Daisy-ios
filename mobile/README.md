@@ -40,6 +40,8 @@ The same freeze applies here as in `docs/CONTENT.md`: keep the v1 bank order and
 
 ## Each game's look
 
+The November 8 mechanics, layout and animation pass is documented in [the game review](../docs/DAISY_POLISH.md), including native light, dark and larger-text captures. `npm test` runs gameplay regressions; `python3 scripts/review-screens.py <UDID>` captures all eight screens from a running local Expo app. This is separate from the engine parity and database rule checks below.
+
 Every game screen copies its original rather than sharing one style, and `useGameLook` in `src/theme.ts` holds the colours. Krillion, Fermi, Minute Cryptic and Globle have one appearance, as they do at the source; Wordle, Connections, Mini Sudoku and Zip follow light and dark. All sprites in `src/games/Sprites.tsx` are original art, and the fonts (VT323, Caveat, Sansita, Mulish, Montserrat) are open-licensed Google Fonts. Copying this closely adds trade dress risk to the existing naming risk, so see `docs/CONTENT.md` before any public release.
 
 Krillion and Fermi show real player data at the source: rarity from live answers, and a histogram of everyone's guesses. Daisy has no such data, so Krillion's ratings stay curated and Fermi shows only your guess against the answer on a log scale.
