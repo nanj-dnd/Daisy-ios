@@ -2,6 +2,7 @@
 // scripts/parity.ts checks this file against output from the Swift engine.
 import content from './content.json';
 import { borderDistance, countries, countryIndex, globleAnswer, heatEmoji } from './globle';
+import { elapsedSeconds, pauseTimer } from './timer';
 
 export const gameKinds = ['trivia', 'estimation', 'cryptic', 'word', 'groups', 'sudoku', 'zip', 'globle'] as const;
 export type GameKind = (typeof gameKinds)[number];
@@ -34,7 +35,7 @@ export const games: Record<GameKind, GameMeta> = {
   },
   zip: {
     title: 'Zip', subtitle: 'One line. Every cell.', duration: '2 min', invitation: 'Complete the path.', footnote: '6 × 6 · One unbroken line',
-    rules: 'Draw one line from 1 through every number in order, filling every cell of the grid. Drag back along your line to undo it. Your time counts, and each hint adds 15 seconds.',
+    rules: 'Draw one line from 1 through every number in order, filling every cell of the grid. Drag back along your line to undo it. The timer starts on your first move and pauses when you leave the game or background the app. Each hint adds 15 seconds.',
   },
   globle: {
     title: 'Globle', subtitle: 'Find the mystery country.', duration: '3 min', invitation: 'Warmer, warmer…', footnote: 'Unlimited guesses · Closest border counts',
@@ -303,12 +304,14 @@ export type GameProgress = {
   started: boolean; completed: boolean; won: boolean; guesses: string[]; values: number[]; solvedGroups: number[];
   mistakes: number; hints: number; revealed: boolean; board: number[]; path?: number[]; notes: Record<number, number[]>; round: number;
   roundDeadline: number | null; pendingAnswer: string; triviaPoints: number[]; startedAt: number | null; completedAt: number | null;
+  timer?: { elapsedMs: number; started: boolean; runningSince: number | null };
 };
 export const newProgress = (): GameProgress => ({
   started: false, completed: false, won: false, guesses: [], values: [], solvedGroups: [], mistakes: 0, hints: 0, revealed: false,
   board: [], notes: {}, round: 0, roundDeadline: null, pendingAnswer: '', triviaPoints: [], startedAt: null, completedAt: null,
 });
 export function finishGame(progress: GameProgress, won: boolean, now = Date.now()) {
+  pauseTimer(progress, now);
   progress.started = true; progress.completed = true; progress.won = won; progress.completedAt = now; progress.roundDeadline = null;
 }
 
@@ -374,7 +377,10 @@ export function isValidSave(value: unknown): value is SaveData {
       && game.solvedGroups.every((group) => group >= 0 && group < 4)
       && game.mistakes >= 0 && game.mistakes <= 4 && game.hints >= 0 && game.hints <= 36
       && game.values.length <= 3 && game.values.every((entry) => entry > 0 && Number.isFinite(entry))
-      && game.guesses.length <= (kind === 'globle' ? countries.length : 7);
+      && game.guesses.length <= (kind === 'globle' ? countries.length : 7)
+      && (game.timer === undefined || (game.timer !== null && Number.isFinite(game.timer.elapsedMs) && game.timer.elapsedMs >= 0
+        && typeof game.timer.started === 'boolean'
+        && (game.timer.runningSince === null || (typeof game.timer.runningSince === 'number' && Number.isFinite(game.timer.runningSince) && game.timer.runningSince >= 0))));
   });
 }
 
@@ -424,11 +430,15 @@ export function shareText(kind: GameKind, day: number, progress: GameProgress) {
   return `${heading}\n${result}\nA little play, every day.`;
 }
 
-const clock = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
+const clock = (seconds: number) => {
+  const total = Number.isFinite(seconds) ? Math.max(0, Math.floor(seconds)) : 0;
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return total >= 3600 ? `${Math.floor(total / 3600)}:${pad(Math.floor(total / 60) % 60)}:${pad(total % 60)}` : `${Math.floor(total / 60)}:${pad(total % 60)}`;
+};
 export const clockLabel = clock;
 /** One comparable number per game, where higher always beats lower, and the label friends see. */
 export function resultScore(kind: GameKind, day: number, progress: GameProgress) {
-  const seconds = Math.max(0, ((progress.completedAt ?? 0) - (progress.startedAt ?? progress.completedAt ?? 0)) / 1000);
+  const seconds = elapsedSeconds(progress, progress.completedAt ?? Date.now());
   switch (kind) {
     case 'trivia': {
       const points = progress.triviaPoints.reduce((sum, value) => sum + value, 0);

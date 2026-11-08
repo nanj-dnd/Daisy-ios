@@ -9,7 +9,6 @@ import { Icon, Toast, useShake, useToast } from '../ui';
 import { TouchKey } from './Keyboard';
 
 const tileGap = 5;
-const keyGap = 6;
 const praise = ['Genius', 'Magnificent', 'Impressive', 'Splendid', 'Great', 'Phew'];
 
 const light = { page: '#FFFFFF', ink: '#1A1A1B', empty: '#D3D6DA', filled: '#878A8C', key: '#D3D6DA', keyInk: '#1A1A1B', absent: '#787C7E', correct: '#6AAA64', present: '#C9B458', toast: '#1A1A1B', toastInk: '#FFFFFF' };
@@ -73,8 +72,9 @@ function LetterKeys({ row, known, keyWidth, tones, enabled, onType }: { row: str
     const mark = known[letter];
     return (
       <TouchKey
-        key={letter} label={mark === undefined ? letter : `${letter}, ${['absent', 'present elsewhere', 'correct position'][mark]}`} press={() => onType(letter)} enabled={enabled}
-        style={[styles.key, { width: keyWidth, backgroundColor: mark === undefined ? tones.key : markFill(mark, tones) }]}
+        key={letter} label={mark === undefined ? letter : `${letter}, ${['absent', 'present elsewhere', 'correct position'][mark]}`} press={() => onType(letter)} enabled={enabled} dimDisabled={false}
+        style={[styles.keySlot, { width: keyWidth }]}
+        faceStyle={[styles.keyFace, { backgroundColor: mark === undefined ? tones.key : markFill(mark, tones) }]}
         textStyle={[styles.keyText, { color: mark === undefined ? tones.keyInk : '#FFFFFF' }]}
       >
         {letter}
@@ -104,8 +104,8 @@ export function WordGame({ day, availableHeight, availableWidth }: { day: number
       if ((known[guess[index]] ?? -1) < mark) known[guess[index]] = mark;
     });
   }
-  const keyHeight = availableHeight < 620 ? 48 : 56;
-  const keyboardHeight = keyHeight * 3 + 16;
+  const keyHeight = availableHeight < 620 ? 54 : 62;
+  const keyboardHeight = keyHeight * 3;
   const tile = Math.max(30, Math.min(62, (availableWidth - tileGap * 4) / 5, (availableHeight - keyboardHeight - 64 - tileGap * 5) / 6));
   const boardWidth = tile * 5 + tileGap * 4;
 
@@ -145,28 +145,31 @@ export function WordGame({ day, availableHeight, availableWidth }: { day: number
     }, reduced ? 0 : wordMotion.reveal);
   };
 
-  const keyWidth = (availableWidth - keyGap * 9) / 10;
-  const wide = keyWidth * 1.5 + keyGap / 2;
+  const keyboardWidth = Math.min(availableWidth, 420);
+  const keyWidth = keyboardWidth / 10;
+  const wide = keyWidth * 1.5;
+  const enterReady = progress.pendingAnswer.length === 5 && !revealing;
 
   return (
     <View style={[styles.game, (!progress.completed || revealing) && styles.fill]}>
       {toast.text !== '' && <Toast text={toast.text} fill={tones.toast} ink={tones.toastInk} top={6} />}
+      <View style={[styles.boardStage, (!progress.completed || revealing) && styles.fill]}>
       <View style={[styles.board, { width: boardWidth, height: tile * 6 + tileGap * 5 }]} accessibilityLabel="Word grid">
         {[0, 1, 2, 3, 4, 5].map((row) => {
           const word = row < progress.guesses.length ? progress.guesses[row] : row === progress.guesses.length ? progress.pendingAnswer : '';
           return <Row key={row} word={word} marks={row < progress.guesses.length ? letterMarks(word, answer) : []} won={justWon && word === answer} shakeRef={row === progress.guesses.length ? shakeRow : undefined} />;
         })}
       </View>
+      </View>
       {(!progress.completed || revealing) && (
         <>
-          <View style={styles.fill} />
-          <View style={styles.keyboard}>
+          <View style={[styles.keyboard, { width: keyboardWidth }]}>
             <View style={[styles.keyRow, { height: keyHeight }]}><LetterKeys row="QWERTYUIOP" known={known} keyWidth={keyWidth} tones={tones} enabled={!revealing && !progress.completed} onType={typeLetter} /></View>
             <View style={[styles.keyRow, { height: keyHeight }]}><LetterKeys row="ASDFGHJKL" known={known} keyWidth={keyWidth} tones={tones} enabled={!revealing && !progress.completed} onType={typeLetter} /></View>
             <View style={[styles.keyRow, { height: keyHeight }]}>
-              <TouchKey label="Enter" press={submit} enabled={!revealing && !progress.completed} style={[styles.key, { width: wide, backgroundColor: tones.key }]} textStyle={[styles.enter, { color: tones.keyInk }]}>ENTER</TouchKey>
+              <TouchKey label="Enter" press={submit} enabled={!revealing && !progress.completed} dimDisabled={false} style={[styles.keySlot, { width: wide }]} faceStyle={[styles.keyFace, { backgroundColor: enterReady ? tones.ink : tones.key }]} textStyle={[styles.enter, { color: enterReady ? tones.page : tones.keyInk }]}>ENTER</TouchKey>
               <LetterKeys row="ZXCVBNM" known={known} keyWidth={keyWidth} tones={tones} enabled={!revealing && !progress.completed} onType={typeLetter} />
-              <TouchKey label="Delete letter" press={remove} enabled={!revealing && !progress.completed} style={[styles.key, { width: wide, backgroundColor: tones.key }]}>
+              <TouchKey label="Delete letter" press={remove} repeat enabled={!revealing && !progress.completed} dimDisabled={false} style={[styles.keySlot, { width: wide }]} faceStyle={[styles.keyFace, { backgroundColor: tones.key }]}>
                 <Icon name="delete.left" size={22} color={tones.keyInk} fallback="⌫" weight="regular" />
               </TouchKey>
             </View>
@@ -178,16 +181,19 @@ export function WordGame({ day, availableHeight, availableWidth }: { day: number
 }
 
 const styles = StyleSheet.create({
-  game: { alignItems: 'center', paddingTop: 12 },
+  game: { alignItems: 'center' },
   fill: { flex: 1 },
+  boardStage: { alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center', paddingVertical: 12 },
   board: { gap: tileGap },
   row: { flex: 1, flexDirection: 'row', gap: tileGap },
   tile: { flex: 1 },
   face: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
   letter: { fontFamily: fonts.plain, fontSize: 32, fontWeight: '700' },
-  keyboard: { gap: 8, alignSelf: 'stretch' },
-  keyRow: { flexDirection: 'row', justifyContent: 'center', gap: keyGap },
-  key: { borderRadius: 4 },
-  keyText: { fontFamily: fonts.plain, fontSize: 19, fontWeight: '700' },
-  enter: { fontFamily: fonts.plain, fontSize: 12, fontWeight: '700' },
+  keyboard: { alignSelf: 'center' },
+  keyRow: { flexDirection: 'row', justifyContent: 'center' },
+  // Touch rectangles meet; only the visible key faces have gaps, so fast thumbs cannot hit dead space.
+  keySlot: { height: '100%' },
+  keyFace: { marginHorizontal: 2.5, marginVertical: 3, borderRadius: 6, shadowColor: '#000000', shadowOpacity: 0.12, shadowRadius: 1, shadowOffset: { width: 0, height: 1 } },
+  keyText: { fontFamily: fonts.plain, fontSize: 20, fontWeight: '700' },
+  enter: { fontFamily: fonts.plain, fontSize: 12, fontWeight: '700', letterSpacing: 0.3 },
 });

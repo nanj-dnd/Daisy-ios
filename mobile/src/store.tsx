@@ -6,6 +6,7 @@ import {
 } from './core/engine';
 import { allowedWords } from './core/words';
 import content from './core/content.json';
+import { restoreTimer } from './core/timer';
 
 const storageKey = 'progress';
 
@@ -38,6 +39,7 @@ class ArcadeStore {
       if (raw !== null) {
         const parsed: unknown = JSON.parse(raw);
         if (!isValidSave(parsed)) throw new Error('corrupt');
+        Object.values(parsed.games).forEach(restoreTimer);
         this.save = parsed;
       }
       this.recoverableLoadError = false; this.persistenceError = null;

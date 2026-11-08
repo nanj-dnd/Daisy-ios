@@ -6,6 +6,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import Svg, { Circle, Polyline } from 'react-native-svg';
 import { clockLabel, makeZip, zipComplete } from '../core/engine';
 import { moveZip } from '../core/play';
+import { checkpointTimer, elapsedSeconds, initializeZipTimer, pauseTimer, resumeZipTimer, startZipTimer } from '../core/timer';
 import { useArcade } from '../store';
 import { useGameLook } from '../theme';
 import { Icon, Press, Toast, useGameActive, useToast } from '../ui';
@@ -26,14 +27,24 @@ export function ZipGame({ day, availableWidth }: { day: number; availableWidth: 
   const size = puzzle.size;
   const inner = availableWidth - 4;
   const cell = inner / size;
-  const seconds = Math.max(0, ((progress.completedAt ?? now) - (progress.startedAt ?? now)) / 1000) + progress.hints * 15;
+  const untouched = !progress.completed && path.length === 0 && progress.hints === 0 && !progress.timer?.started;
+  const seconds = (untouched ? 0 : elapsedSeconds(progress, now)) + progress.hints * 15;
   const lastCell = useRef(-1);
 
   useEffect(() => {
-    if (progress.completed || !active) return;
+    if (progress.completed) return;
+    arcade.update('zip', day, state => {
+      initializeZipTimer(state);
+      if (active) resumeZipTimer(state); else pauseTimer(state);
+    });
+    if (!active) return;
     const clock = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(clock);
-  }, [progress.completed, active]);
+    const checkpoint = setInterval(() => arcade.update('zip', day, state => checkpointTimer(state)), 5000);
+    return () => {
+      clearInterval(clock); clearInterval(checkpoint);
+      arcade.update('zip', day, state => pauseTimer(state));
+    };
+  }, [arcade, day, progress.completed, active]);
 
   const finishIfDone = (state: typeof progress) => {
     if (!zipComplete(puzzle, state.path ?? [])) return;
@@ -44,7 +55,10 @@ export function ZipGame({ day, availableWidth }: { day: number; availableWidth: 
     arcade.update('zip', day, (state) => {
       if (state.completed) return;
       const previous = state.path ?? [];
-      state.path = moveZip(puzzle, previous, target);
+      const next = moveZip(puzzle, previous, target);
+      if (previous.length === next.length && previous.every((cell, index) => cell === next[index])) return;
+      startZipTimer(state);
+      state.path = next;
       if (state.path.length > previous.length && puzzle.marks[target]) void Haptics.selectionAsync();
       finishIfDone(state);
     });
@@ -74,6 +88,7 @@ export function ZipGame({ day, availableWidth }: { day: number; availableWidth: 
   ]);
   const hint = () => arcade.update('zip', day, (state) => {
     if (state.completed) return;
+    startZipTimer(state);
     const line = state.path ?? [];
     let shared = 0;
     while (shared < line.length && line[shared] === puzzle.solution[shared]) shared += 1;
@@ -91,7 +106,7 @@ export function ZipGame({ day, availableWidth }: { day: number; availableWidth: 
     <View style={styles.game}>
       <Toast text={toast.text} fill={look.ink} ink={look.page} top={54} />
       <View style={styles.status}>
-        <View style={styles.clock} accessible accessibilityLabel={`Time ${clockLabel(seconds)}`}>
+        <View style={styles.clock} accessible accessibilityLabel={`Time ${clockLabel(seconds)}${untouched ? ', starts on your first move' : !active && !progress.completed ? ', paused' : ''}`}>
           <Icon name="clock" size={15} color={look.ink} fallback="◷" />
           <Text style={[styles.clockText, { color: look.ink }]}>{clockLabel(seconds)}</Text>
         </View>

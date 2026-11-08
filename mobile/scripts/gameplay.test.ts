@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { advanceTrivia, beginTrivia, groupsFor, isValidSave, letterMarks, makeSudoku, makeZip, newProgress, resultScore, shareText, submitTrivia, sudokuPeers, triviaFor, zipCanStep, zipComplete } from '../src/core/engine';
+import { advanceTrivia, beginTrivia, clockLabel, finishGame, groupsFor, isValidSave, letterMarks, makeSudoku, makeZip, newProgress, resultScore, shareText, submitTrivia, sudokuPeers, triviaFor, zipCanStep, zipComplete } from '../src/core/engine';
+import { checkpointTimer, elapsedSeconds, initializeZipTimer, pauseTimer, restoreTimer, resumeZipTimer, startZipTimer } from '../src/core/timer';
 import { borderDistance, countries, findCountry, globleAnswer } from '../src/core/globle';
 import { checkCryptic, crypticHint, evaluateCalculator, lockEstimate, moveZip, nextEstimate, shuffledWords, submitConnections, writeSudoku } from '../src/core/play';
 
@@ -148,6 +149,61 @@ test('Zip touch stepping can solve 401 daily grids and always retains a valid pr
 test('Zip result includes the 15-second penalty per hint', () => {
   const state = newProgress(); state.startedAt = 1000; state.completedAt = 61_000; state.completed = state.won = true; state.hints = 2;
   assert.equal(resultScore('zip', day, state).label, '1:30 · 2 hints');
+});
+test('timer format rolls into hours and never displays unbounded minutes', () => {
+  for (const [seconds, label] of [[0, '0:00'], [9.9, '0:09'], [60, '1:00'], [3599, '59:59'], [3600, '1:00:00'], [34_539, '9:35:39'], [-5, '0:00'], [NaN, '0:00'], [Infinity, '0:00']] as const) assert.equal(clockLabel(seconds), label);
+});
+test('opening an untouched Zip grid overnight never starts its play clock', () => {
+  const state = newProgress(); state.started = true; state.startedAt = 1000;
+  initializeZipTimer(state, 36_001_000);
+  resumeZipTimer(state, 36_001_000);
+  assert.equal(elapsedSeconds(state, 36_101_000), 0);
+  assert.equal(state.timer?.started, false);
+});
+test('Zip counts active play only, across a long pause and repeated resume calls', () => {
+  const state = newProgress();
+  startZipTimer(state, 1000);
+  resumeZipTimer(state, 2000);
+  assert.equal(elapsedSeconds(state, 6000), 5);
+  pauseTimer(state, 6000);
+  assert.equal(elapsedSeconds(state, 3_606_000), 5);
+  resumeZipTimer(state, 3_606_000);
+  assert.equal(elapsedSeconds(state, 3_613_000), 12);
+  pauseTimer(state, 3_613_000);
+  pauseTimer(state, 9_000_000);
+  assert.equal(elapsedSeconds(state, 9_000_000), 12);
+});
+test('saved clock checkpoints do not count process downtime after a cold launch', () => {
+  const state = newProgress(); startZipTimer(state, 1000); checkpointTimer(state, 6000);
+  const restored = JSON.parse(JSON.stringify(state));
+  restoreTimer(restored); resumeZipTimer(restored, 3_600_000);
+  assert.equal(elapsedSeconds(restored, 3_601_000), 6);
+});
+test('finishing Zip freezes active time and adds each hint penalty exactly once', () => {
+  const state = newProgress(); state.startedAt = 1000; state.hints = 2;
+  initializeZipTimer(state, 1000); startZipTimer(state, 1000);
+  finishGame(state, true, 61_000);
+  assert.equal(elapsedSeconds(state, 9_000_000), 60);
+  assert.equal(state.timer?.runningSince, null);
+  assert.equal(resultScore('zip', day, state).label, '1:30 · 2 hints');
+  resumeZipTimer(state, 9_000_000);
+  assert.equal(elapsedSeconds(state, 9_000_000), 60);
+});
+test('resetting a Zip path preserves its started clock, while legacy completed scores remain intact', () => {
+  const state = newProgress(); state.path = [1]; startZipTimer(state, 1000);
+  state.path = []; pauseTimer(state, 6000); resumeZipTimer(state, 10_000);
+  assert.equal(elapsedSeconds(state, 11_000), 6);
+  const old = newProgress(); old.startedAt = 1000; old.completedAt = 91_000; old.completed = old.won = true;
+  assert.equal(resultScore('zip', day, old).label, '1:30');
+  initializeZipTimer(old, 999_000);
+  assert.equal(resultScore('zip', day, old).label, '1:30');
+});
+test('play clock clamps backwards system-clock adjustments and rejects corrupt timer saves', () => {
+  const state = newProgress(); startZipTimer(state, 10_000); pauseTimer(state, 9000);
+  assert.equal(elapsedSeconds(state), 0);
+  assert.equal(isValidSave({ schemaVersion: 1, games: { [`${day}:zip`]: state } }), true);
+  state.timer!.elapsedMs = -1;
+  assert.equal(isValidSave({ schemaVersion: 1, games: { [`${day}:zip`]: state } }), false);
 });
 test('Wordle repeated letters consume only the answer’s available occurrences', () => {
   assert.deepEqual(letterMarks('ARRAY', 'ABBEY'), [2,0,0,0,2]);
